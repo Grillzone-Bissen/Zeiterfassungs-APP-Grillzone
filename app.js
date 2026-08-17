@@ -1,5 +1,5 @@
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwj4BYYB2fK5ehV_JSwvuUZ50sIYAXKsB9EBSOiVNv8LuiM1qmg1hV_4yF7ozcOLUY2/exec";
-
+                            
 let currentUser = null;
 const ADMIN_CODE = "99";
 
@@ -118,11 +118,11 @@ function stamp(type) {
     document.getElementById('status-msg').innerText = `Status: ${type} gespeichert um ${entry.time}`;
 
     // 2. An Google Sheets senden
-    if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== "HIER_DEINE_WEB_APP_URL_EINFÜGEN") {
+    if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL.startsWith("https://script.google.com")) {
         fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify(entry)
         }).then(() => {
             console.log('Erfolgreich an Google Sheets gesendet.');
