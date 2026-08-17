@@ -11,10 +11,10 @@ jobs:
 
     steps:
     - name: 1. Code auschecken
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: 2. Python Umgebung einrichten
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.10'
 
@@ -30,11 +30,10 @@ jobs:
 
     - name: 5. APK Datei bauen
       run: |
-        # Erstelle eine minimale Buildozer-Konfiguration, falls keine vorhanden ist
-        yes | buildozer android debug
+        buildozer android debug
 
     - name: 6. Fertige APK als Artefakt bereitstellen
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Zeiterfassung-Android-App
         path: bin/*.apk
