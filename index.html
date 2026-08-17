@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zeiterfassung</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- SEITE 1: LOGIN -->
+        <div id="login-view" class="card">
+            <h2>Zeiterfassung Login</h2>
+            <input type="text" id="personal-nr-input" placeholder="Personalnummer eingeben">
+            <button onclick="login()" class="btn btn-primary">Einloggen</button>
+            <hr>
+            <h3>Neuen User anlegen</h3>
+            <input type="text" id="new-name" placeholder="Name">
+            <input type="text" id="new-nr" placeholder="Personalnummer">
+            <button onclick="createUser()" class="btn btn-secondary">User Speichern</button>
+        </div>
+
+        <!-- SEITE 2: ZEITERFASSUNG -->
+        <div id="time-view" class="card hidden">
+            <h2 id="welcome-msg"></h2>
+            <p id="status-msg">Status: Bereit</p>
+            
+            <div class="button-group">
+                <button onclick="stamp('Arbeitsbeginn')" class="btn btn-success">Arbeitsbeginn</button>
+                <button onclick="stamp('Pause')" class="btn btn-warning">Pause</button>
+                <button onclick="stamp('Arbeitsende')" class="btn btn-danger">Arbeitsende</button>
+            </div>
+
+            <hr>
+            <button onclick="exportCSV()" class="btn btn-info">CSV Daten Exportieren</button>
+            <button onclick="logout()" class="btn btn-outline">Abmelden</button>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
