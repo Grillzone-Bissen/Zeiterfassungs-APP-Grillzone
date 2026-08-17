@@ -4,13 +4,12 @@ package.name = zeiterfassung
 package.domain = org.zeiterfassung
 
 source.dir = .
-source.include_exts = py,png,jpg,kv,atlas,html,css,js
+source.include_exts = html,css,js,png,jpg,py
 
 version = 1.0.0
-requirements = python3,kivy
+requirements = python3,android,pyjnius
 
 orientation = portrait
-osx.kivy_version = 2.1.0
 
 fullscreen = 0
 android.permissions = INTERNET
