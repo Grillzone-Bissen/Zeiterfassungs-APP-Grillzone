@@ -1,15 +1,29 @@
 let currentUser = null;
 const ADMIN_CODE = "99";
 
-// Login-Funktion (KORRIGIERT)
+// Initialisiere Standard-Admin im LocalStorage, falls noch gar keine User existieren
+function initAdmin() {
+    let users = JSON.parse(localStorage.getItem('users') || '{}');
+    if (!users[ADMIN_CODE]) {
+        users[ADMIN_CODE] = "Administrator";
+        localStorage.setItem('users', JSON.stringify(users));
+    }
+}
+
+// Beim Aufruf der App sofort den Speicher prüfen/initialisieren
+initAdmin();
+
+// Login-Funktion
 function login() {
-    const nr = document.getElementById('personal-nr-input').value.trim();
+    const nrInput = document.getElementById('personal-nr-input');
+    if (!nrInput) return;
     
+    const nr = nrInput.value.trim();
     if (!nr) {
         return alert('Bitte gib eine Personalnummer ein!');
     }
 
-    // 1. ZUERST Admin-Prüfung durchführen
+    // 1. ZUERST explizite Admin-Prüfung (unabhängig vom Zustand des LocalStorage)
     if (nr === ADMIN_CODE) {
         currentUser = { nr: ADMIN_CODE, name: "Administrator", isAdmin: true };
         document.getElementById('login-view').classList.add('hidden');
@@ -18,7 +32,7 @@ function login() {
         return;
     }
 
-    // 2. DANN Mitarbeiter im LocalStorage suchen
+    // 2. DANN normale Mitarbeiter-Prüfung aus dem LocalStorage
     let users = JSON.parse(localStorage.getItem('users') || '{}');
 
     if (users[nr]) {
@@ -42,8 +56,11 @@ function logout() {
 
 // User anlegen (Nur Admin)
 function createUser() {
-    const name = document.getElementById('new-name').value.trim();
-    const nr = document.getElementById('new-nr').value.trim();
+    const nameInput = document.getElementById('new-name');
+    const nrInput = document.getElementById('new-nr');
+    
+    const name = nameInput.value.trim();
+    const nr = nrInput.value.trim();
 
     if (!name || !nr) return alert('Bitte Name und Personalnummer eingeben!');
     if (nr === ADMIN_CODE) return alert('Die Personalnummer 99 ist für den Admin reserviert!');
@@ -55,8 +72,8 @@ function createUser() {
     localStorage.setItem('users', JSON.stringify(users));
     
     alert(`User ${name} (Nr. ${nr}) angelegt!`);
-    document.getElementById('new-name').value = '';
-    document.getElementById('new-nr').value = '';
+    nameInput.value = '';
+    nrInput.value = '';
     
     renderUserList();
 }
@@ -67,9 +84,9 @@ function renderUserList() {
     let users = JSON.parse(localStorage.getItem('users') || '{}');
     userListDiv.innerHTML = '';
 
-    const keys = Object.keys(users);
+    const keys = Object.keys(users).filter(nr => nr !== ADMIN_CODE); // Admin nicht in der Löschliste anzeigen
     if (keys.length === 0) {
-        userListDiv.innerHTML = '<p style="color: #666;">Keine Mitarbeiter angelegt.</p>';
+        userListDiv.innerHTML = '<p style="color: #666;">Keine regulären Mitarbeiter angelegt.</p>';
         return;
     }
 
@@ -130,3 +147,4 @@ function exportCSV() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+}
