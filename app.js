@@ -1,12 +1,15 @@
 let currentUser = null;
 const ADMIN_CODE = "99";
 
-// Login-Funktion
+// Login-Funktion (KORRIGIERT)
 function login() {
     const nr = document.getElementById('personal-nr-input').value.trim();
-    let users = JSON.parse(localStorage.getItem('users') || '{}');
+    
+    if (!nr) {
+        return alert('Bitte gib eine Personalnummer ein!');
+    }
 
-    // Admin-Login
+    // 1. ZUERST Admin-Prüfung durchführen
     if (nr === ADMIN_CODE) {
         currentUser = { nr: ADMIN_CODE, name: "Administrator", isAdmin: true };
         document.getElementById('login-view').classList.add('hidden');
@@ -15,7 +18,9 @@ function login() {
         return;
     }
 
-    // Normaler Mitarbeiter-Login
+    // 2. DANN Mitarbeiter im LocalStorage suchen
+    let users = JSON.parse(localStorage.getItem('users') || '{}');
+
     if (users[nr]) {
         currentUser = { nr: nr, name: users[nr], isAdmin: false };
         document.getElementById('welcome-msg').innerText = `Hallo, ${currentUser.name}!`;
@@ -53,7 +58,7 @@ function createUser() {
     document.getElementById('new-name').value = '';
     document.getElementById('new-nr').value = '';
     
-    renderUserList(); // Liste aktualisieren
+    renderUserList();
 }
 
 // User-Liste im Adminbereich anzeigen
@@ -64,7 +69,7 @@ function renderUserList() {
 
     const keys = Object.keys(users);
     if (keys.length === 0) {
-        userListDiv.innerHTML = '<p>Keine Mitarbeiter angelegt.</p>';
+        userListDiv.innerHTML = '<p style="color: #666;">Keine Mitarbeiter angelegt.</p>';
         return;
     }
 
@@ -125,4 +130,3 @@ function exportCSV() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-}
