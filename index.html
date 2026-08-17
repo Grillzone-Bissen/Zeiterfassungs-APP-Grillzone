@@ -26,6 +26,13 @@
                 <button onclick="stamp('Arbeitsende')" class="btn btn-danger">Arbeitsende</button>
             </div>
 
+            <!-- BUTTON ZUM ÖFFNEN DES MANUELLEN MODALS -->
+            <div style="margin-top: 15px;">
+                <button type="button" onclick="openManualStampModal()" class="btn btn-warning">
+                    📝 Manuelle Zeiterfassung
+                </button>
+            </div>
+
             <hr>
             <button onclick="exportCSV()" class="btn btn-info">CSV Daten Exportieren</button>
             <button onclick="logout()" class="btn btn-outline">Abmelden</button>
@@ -35,6 +42,13 @@
         <div id="admin-view" class="card hidden">
             <h2>Admin-Bereich</h2>
             <p>Willkommen, Administrator!</p>
+
+            <!-- BUTTON AUCH IM ADMIN-BEREICH VERFÜGBAR -->
+            <div style="margin-bottom: 15px;">
+                <button type="button" onclick="openManualStampModal()" class="btn btn-warning">
+                    📝 Manuelle Zeiterfassung nachbuchen
+                </button>
+            </div>
             
             <hr>
             <h3>Neuen User anlegen</h3>
@@ -51,6 +65,36 @@
             <button onclick="logout()" class="btn btn-outline">Abmelden</button>
         </div>
     </div>
+
+    <!-- MODAL (Direkt am Ende vor script, damit es sauber über der Seite gelagert werden kann) -->
+    <div id="manual-stamp-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Manuelle Zeiterfassung nachbuchen</h3>
+            
+            <label for="manual-nr">Personalnummer:</label>
+            <input type="number" id="manual-nr" placeholder="z. B. 1" required>
+
+            <label for="manual-date">Datum:</label>
+            <input type="date" id="manual-date" required>
+
+            <label for="manual-action">Aktion:</label>
+            <select id="manual-action">
+                <option value="Arbeitsbeginn">Arbeitsbeginn</option>
+                <option value="Pause Beginn">Pause Beginn</option>
+                <option value="Pause Ende">Pause Ende</option>
+                <option value="Arbeitsende">Arbeitsende</option>
+            </select>
+
+            <label for="manual-time">Uhrzeit (HH:MM):</label>
+            <input type="time" id="manual-time" required>
+
+            <div class="modal-actions" style="margin-top: 15px;">
+                <button type="button" class="btn btn-success" onclick="submitManualStamp()">Speichern</button>
+                <button type="button" class="btn btn-secondary" onclick="closeManualStampModal()">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+
     <script src="app.js"></script>
 </body>
 </html>
