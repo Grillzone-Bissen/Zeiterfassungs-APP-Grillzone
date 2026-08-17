@@ -1,0 +1,40 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 1. Code auschecken
+      uses: actions/checkout@v3
+
+    - name: 2. Python Umgebung einrichten
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: 3. System-Abhängigkeiten installieren
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential ccache git libffi-dev libssl-dev python3-dev zip unzip openjdk-17-jdk
+
+    - name: 4. Buildozer und Cython installieren
+      run: |
+        pip install --upgrade pip
+        pip install buildozer cython==0.29.33
+
+    - name: 5. APK Datei bauen
+      run: |
+        # Erstelle eine minimale Buildozer-Konfiguration, falls keine vorhanden ist
+        yes | buildozer android debug
+
+    - name: 6. Fertige APK als Artefakt bereitstellen
+      uses: actions/upload-artifact@v3
+      with:
+        name: Zeiterfassung-Android-App
+        path: bin/*.apk
