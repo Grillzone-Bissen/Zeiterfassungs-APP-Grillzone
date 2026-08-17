@@ -7,32 +7,62 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
     - name: 1. Code auschecken
       uses: actions/checkout@v4
 
-    - name: 2. Python Umgebung einrichten
+    - name: 2. Java 17 einrichten
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: 3. Python 3.11 einrichten
       uses: actions/setup-python@v5
       with:
-        python-version: '3.10'
+        python-version: '3.11'
 
-    - name: 3. System-Abhängigkeiten installieren
+    - name: 4. Vollständige C/C++ & Autotools Build-Dependencies installieren
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential ccache git libffi-dev libssl-dev python3-dev zip unzip openjdk-17-jdk
+        sudo apt-get install -y \
+          build-essential \
+          git \
+          ffmpeg \
+          libsdl2-dev \
+          libsdl2-image-dev \
+          libsdl2-mixin-dev \
+          libsdl2-ttf-dev \
+          libportmidi-dev \
+          libswscale-dev \
+          libavformat-dev \
+          libavcodec-dev \
+          zlib1g-dev \
+          autoconf \
+          automake \
+          libtool \
+          pkg-config \
+          cmake \
+          ccache \
+          libffi-dev \
+          libssl-dev \
+          zip \
+          unzip
 
-    - name: 4. Buildozer und Cython installieren
+    - name: 5. Buildozer & gepinnte Cython-Version installieren
       run: |
-        pip install --upgrade pip
-        pip install buildozer cython==0.29.33
+        python -m pip install --upgrade pip setuptools
+        python -m pip install "cython<3.0.0" buildozer
 
-    - name: 5. APK Datei bauen
+    - name: 6. APK bauen
+      env:
+        JAVA_HOME: ${{ env.JAVA_HOME }}
       run: |
-        buildozer android debug
+        buildozer -v android debug
 
-    - name: 6. Fertige APK als Artefakt bereitstellen
+    - name: 7. Fertige APK als Artefakt hochladen
       uses: actions/upload-artifact@v4
       with:
         name: Zeiterfassung-Android-App
