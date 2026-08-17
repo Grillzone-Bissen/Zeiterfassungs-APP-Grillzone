@@ -13,3 +13,18 @@ input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc;
 .btn-info { background: #17a2b8; color: white; }
 .btn-outline { background: transparent; border: 1px solid #6c757d; }
 hr { margin: 20px 0; border: 0; border-top: 1px solid #eee; }
+.user-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+}
+.btn-delete {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+}
