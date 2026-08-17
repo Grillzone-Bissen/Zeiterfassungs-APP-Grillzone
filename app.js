@@ -149,3 +149,79 @@ function exportCSV() {
     link.click();
     document.body.removeChild(link);
 }
+
+// =========================================================
+// MANUELLE ZEITERFASSUNG (NACHBUCHUNG)
+// =========================================================
+
+// Modal öffnen & Datum auf heute vorbelegen
+function openManualStampModal() {
+    const modal = document.getElementById('manual-stamp-modal');
+    if (modal) {
+        modal.style.display = 'flex'; // Öffnet das Fenster
+    }
+    // Heutiges Datum als Vorgabe setzen (Format: YYYY-MM-DD)
+    const today = new Date().toISOString().split('T')[0];
+    const dateInput = document.getElementById('manual-date');
+    if (dateInput) {
+        dateInput.value = today;
+    }
+}
+
+// Modal schließen
+function closeManualStampModal() {
+    const modal = document.getElementById('manual-stamp-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// Manuelle Zeiterfassung absenden
+function submitManualStamp() {
+    const nr = document.getElementById('manual-nr').value.trim();
+    const rawDate = document.getElementById('manual-date').value; // Format: YYYY-MM-DD
+    const action = document.getElementById('manual-action').value;
+    const time = document.getElementById('manual-time').value; // Format: HH:MM
+
+    if (!nr || !rawDate || !time) {
+        alert("Bitte fülle alle Felder aus (Personalnummer, Datum und Uhrzeit)!");
+        return;
+    }
+
+    // Datum von YYYY-MM-DD in deutsches Format D.M.YYYY umwandeln
+    const dateParts = rawDate.split("-");
+    const formattedDate = `${parseInt(dateParts[2], 10)}.${parseInt(dateParts[1], 10)}.${dateParts[0]}`;
+    const formattedTime = `${time}:00`; // Sekunden ergänzen
+
+    // Name aus den lokal gespeicherten Mitarbeitern ermitteln (falls vorhanden)
+    let employees = JSON.parse(localStorage.getItem('users') || '[]');
+    let emp = employees.find(e => String(e.nr) === String(nr));
+    let name = emp ? emp.name : `Mitarbeiter ${nr}`;
+
+    const entry = {
+        personalNr: nr,
+        name: name,
+        action: action,
+        date: formattedDate,
+        time: formattedTime,
+        isManual: true // Kennzeichnung für manuelle Nachbuchung
+    };
+
+    // An Google Script senden
+    if (typeof GOOGLE_SCRIPT_URL !== 'undefined' && GOOGLE_SCRIPT_URL.startsWith("https://script.google.com")) {
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify(entry)
+        }).then(() => {
+            alert(`Manuelle Buchung für Personal-Nr. ${nr} (${action} am ${formattedDate} um ${time}) wurde gespeichert.`);
+            closeManualStampModal();
+        }).catch(err => {
+            console.error('Fehler beim Senden:', err);
+            alert('Fehler beim Speichern der manuellen Buchung.');
+        });
+    } else {
+        alert("Google Script URL fehlt oder ist ungültig.");
+    }
+}
