@@ -1,25 +1,18 @@
 import os
-from android.runnable import run_on_ui_thread
-from jnius import autoclass
+import webbrowser
+from kivy.app import App
+from kivy.uix.label import Label
+from kivy.clock import Clock
 
-# Native Android-Klassen laden
-PythonActivity = autoclass('org.kivy.android.PythonActivity')
-WebView = autoclass('android.webkit.WebView')
-WebViewClient = autoclass('android.webkit.WebViewClient')
+class ZeiterfassungApp(App):
+    def build(self):
+        # Öffnet beim Start die lokale HTML-Datei im Android-Browser
+        Clock.schedule_once(self.open_browser, 0.5)
+        return Label(text="Zeiterfassung wird gestartet...")
 
-@run_on_ui_thread
-def start_webview():
-    activity = PythonActivity.mActivity
-    webview = WebView(activity)
-    webview.getSettings().setJavaScriptEnabled(True)
-    webview.getSettings().setDomStorageEnabled(True)
-    webview.setWebViewClient(WebViewClient())
-    
-    # HTML-Datei aus dem App-Verzeichnis laden
-    html_path = os.path.abspath('index.html')
-    webview.loadUrl('file://' + html_path)
-    
-    activity.setContentView(webview)
+    def open_browser(self, dt):
+        html_path = os.path.abspath('index.html')
+        webbrowser.open('file://' + html_path)
 
 if __name__ == '__main__':
-    start_webview()
+    ZeiterfassungApp().run()
