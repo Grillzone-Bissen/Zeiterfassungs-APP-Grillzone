@@ -1,26 +1,23 @@
 let currentUser = null;
+const ADMIN_CODE = "99";
 
-// User anlegen
-function createUser() {
-    const name = document.getElementById('new-name').value.trim();
-    const nr = document.getElementById('new-nr').value.trim();
-    if (!name || !nr) return alert('Bitte Name und Personalnummer eingeben!');
-
-    let users = JSON.parse(localStorage.getItem('users') || '{}');
-    users[nr] = name;
-    localStorage.setItem('users', JSON.stringify(users));
-    alert(`User ${name} mit Nr. ${nr} wurde angelegt!`);
-    document.getElementById('new-name').value = '';
-    document.getElementById('new-nr').value = '';
-}
-
-// Login
+// Login-Funktion
 function login() {
     const nr = document.getElementById('personal-nr-input').value.trim();
     let users = JSON.parse(localStorage.getItem('users') || '{}');
 
+    // Admin-Login
+    if (nr === ADMIN_CODE) {
+        currentUser = { nr: ADMIN_CODE, name: "Administrator", isAdmin: true };
+        document.getElementById('login-view').classList.add('hidden');
+        document.getElementById('admin-view').classList.remove('hidden');
+        renderUserList();
+        return;
+    }
+
+    // Normaler Mitarbeiter-Login
     if (users[nr]) {
-        currentUser = { nr: nr, name: users[nr] };
+        currentUser = { nr: nr, name: users[nr], isAdmin: false };
         document.getElementById('welcome-msg').innerText = `Hallo, ${currentUser.name}!`;
         document.getElementById('login-view').classList.add('hidden');
         document.getElementById('time-view').classList.remove('hidden');
@@ -34,7 +31,62 @@ function logout() {
     currentUser = null;
     document.getElementById('personal-nr-input').value = '';
     document.getElementById('time-view').classList.add('hidden');
+    document.getElementById('admin-view').classList.add('hidden');
     document.getElementById('login-view').classList.remove('hidden');
+}
+
+// User anlegen (Nur Admin)
+function createUser() {
+    const name = document.getElementById('new-name').value.trim();
+    const nr = document.getElementById('new-nr').value.trim();
+
+    if (!name || !nr) return alert('Bitte Name und Personalnummer eingeben!');
+    if (nr === ADMIN_CODE) return alert('Die Personalnummer 99 ist für den Admin reserviert!');
+
+    let users = JSON.parse(localStorage.getItem('users') || '{}');
+    if (users[nr]) return alert('Diese Personalnummer existiert bereits!');
+
+    users[nr] = name;
+    localStorage.setItem('users', JSON.stringify(users));
+    
+    alert(`User ${name} (Nr. ${nr}) angelegt!`);
+    document.getElementById('new-name').value = '';
+    document.getElementById('new-nr').value = '';
+    
+    renderUserList(); // Liste aktualisieren
+}
+
+// User-Liste im Adminbereich anzeigen
+function renderUserList() {
+    const userListDiv = document.getElementById('user-list');
+    let users = JSON.parse(localStorage.getItem('users') || '{}');
+    userListDiv.innerHTML = '';
+
+    const keys = Object.keys(users);
+    if (keys.length === 0) {
+        userListDiv.innerHTML = '<p>Keine Mitarbeiter angelegt.</p>';
+        return;
+    }
+
+    keys.forEach(nr => {
+        const item = document.createElement('div');
+        item.className = 'user-item';
+        item.innerHTML = `
+            <span><strong>${users[nr]}</strong> (Nr. ${nr})</span>
+            <button class="btn-delete" onclick="deleteUser('${nr}')">Löschen</button>
+        `;
+        userListDiv.appendChild(item);
+    });
+}
+
+// User löschen (Nur Admin)
+function deleteUser(nr) {
+    if (confirm(`Möchtest du den User mit der Nr. ${nr} wirklich löschen?`)) {
+        let users = JSON.parse(localStorage.getItem('users') || '{}');
+        delete users[nr];
+        localStorage.setItem('users', JSON.stringify(users));
+        renderUserList();
+    }
 }
 
 // Zeit stempeln
