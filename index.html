@@ -13,14 +13,9 @@
             <h2>Zeiterfassung Login</h2>
             <input type="text" id="personal-nr-input" placeholder="Personalnummer eingeben">
             <button onclick="login()" class="btn btn-primary">Einloggen</button>
-            <hr>
-            <h3>Neuen User anlegen</h3>
-            <input type="text" id="new-name" placeholder="Name">
-            <input type="text" id="new-nr" placeholder="Personalnummer">
-            <button onclick="createUser()" class="btn btn-secondary">User Speichern</button>
         </div>
 
-        <!-- SEITE 2: ZEITERFASSUNG -->
+        <!-- SEITE 2: ZEITERFASSUNG (Für normale Mitarbeiter) -->
         <div id="time-view" class="card hidden">
             <h2 id="welcome-msg"></h2>
             <p id="status-msg">Status: Bereit</p>
@@ -33,6 +28,26 @@
 
             <hr>
             <button onclick="exportCSV()" class="btn btn-info">CSV Daten Exportieren</button>
+            <button onclick="logout()" class="btn btn-outline">Abmelden</button>
+        </div>
+
+        <!-- SEITE 3: ADMIN-BEREICH (Nur für Nr. 99) -->
+        <div id="admin-view" class="card hidden">
+            <h2>Admin-Bereich</h2>
+            <p>Willkommen, Administrator!</p>
+            
+            <hr>
+            <h3>Neuen User anlegen</h3>
+            <input type="text" id="new-name" placeholder="Name des Mitarbeiters">
+            <input type="text" id="new-nr" placeholder="Personalnummer">
+            <button onclick="createUser()" class="btn btn-secondary">User Speichern</button>
+
+            <hr>
+            <h3>Vorhandene User löschen</h3>
+            <div id="user-list"></div>
+
+            <hr>
+            <button onclick="exportCSV()" class="btn btn-info">Alle CSV-Daten Exportieren</button>
             <button onclick="logout()" class="btn btn-outline">Abmelden</button>
         </div>
     </div>
