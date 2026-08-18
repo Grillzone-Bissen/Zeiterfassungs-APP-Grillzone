@@ -14,13 +14,18 @@ function initUsers() {
     }
 }
 
+function handleLoginSubmit(event) {
+    if (event) event.preventDefault();
+    login();
+}
+
 function login() {
     const inputEl = document.getElementById('personal-nr-input');
-    if (!inputEl) return;
-
-    const nrInput = inputEl.value.trim();
     const errorMsg = document.getElementById('login-error-msg');
     if (errorMsg) errorMsg.innerText = '';
+
+    if (!inputEl) return;
+    const nrInput = inputEl.value.trim();
 
     if (!nrInput) {
         if (errorMsg) errorMsg.innerText = "Bitte Personalnummer eingeben!";
@@ -29,6 +34,7 @@ function login() {
 
     let users = JSON.parse(localStorage.getItem('users') || '{}');
 
+    // Admin 99 Fallback
     if (nrInput === '99') {
         users['99'] = { nr: '99', name: 'Administrator', isAdmin: true };
         localStorage.setItem('users', JSON.stringify(users));
@@ -56,8 +62,11 @@ function login() {
 
 function logout() {
     currentUser = null;
-    document.getElementById('personal-nr-input').value = '';
-    document.getElementById('login-error-msg').innerText = '';
+    const inputEl = document.getElementById('personal-nr-input');
+    const errorMsg = document.getElementById('login-error-msg');
+    
+    if (inputEl) inputEl.value = '';
+    if (errorMsg) errorMsg.innerText = '';
 
     document.getElementById('time-view').classList.add('hidden');
     document.getElementById('admin-view').classList.add('hidden');
@@ -146,7 +155,7 @@ function renderUserList() {
 
             li.innerHTML = `
                 <span><strong>Nr. ${nr}:</strong> ${users[nr].name}</span>
-                <button onclick="deleteUser('${nr}')" class="btn btn-danger" style="width: auto; padding: 4px 10px; margin: 0; font-size: 12px;">Löschen</button>
+                <button type="button" onclick="deleteUser('${nr}')" class="btn btn-danger" style="width: auto; padding: 4px 10px; margin: 0; font-size: 12px;">Löschen</button>
             `;
             listEl.appendChild(li);
         }
@@ -164,30 +173,7 @@ function deleteUser(nr) {
     }
 }
 
+// CORS-Sicherer CSV Export ohne AJAX-Sperre
 function exportCSV() {
-    fetch(GOOGLE_SCRIPT_URL)
-        .then(response => response.text())
-        .then(csvData => {
-            if (!csvData || csvData.trim() === "") {
-                alert("Keine Stempeldaten in Google Sheets vorhanden!");
-                return;
-            }
-
-            const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-
-            const link = document.createElement("a");
-            link.setAttribute("href", url);
-            link.setAttribute("download", `Stempeldaten_Export_${new Date().toISOString().slice(0,10)}.csv`);
-            document.body.appendChild(link);
-
-            link.click();
-
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-        })
-        .catch(err => {
-            console.error("Export-Fehler:", err);
-            alert("Fehler beim Herunterladen der CSV-Datei aus Google Sheets!");
-        });
+    window.location.href = GOOGLE_SCRIPT_URL;
 }
