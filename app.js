@@ -178,30 +178,29 @@ function deleteUser(nr) {
 // CSV EXPORT (Aus lokaler Sicherung)
 // =========================================================
 function exportCSV() {
-   window.open(GOOGLE_SCRIPT_URL, '_blank');
-    }
-    if (history.length === 0) {
-        alert("Keine Stempeldaten im lokalen Speicher vorhanden!");
-        return;
-    }
+    fetch(GOOGLE_SCRIPT_URL)
+        .then(response => response.text())
+        .then(csvData => {
+            if (!csvData || csvData.trim() === "") {
+                alert("Keine Stempeldaten in Google Sheets vorhanden!");
+                return;
+            }
 
-    let csvContent = "\uFEFF"; // UTF-8 BOM
-    csvContent += "Datum;Uhrzeit;Personalnummer;Name;Aktion\n";
-
-    history.forEach(item => {
-        let cleanName = item.name.replace(/;/g, ",");
-        csvContent += `${item.date};${item.time};${item.personalNr};${cleanName};${item.action}\n`;
-    });
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `Stempeldaten_${new Date().toISOString().slice(0,10)}.csv`);
-    document.body.appendChild(link);
-    
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+            const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Stempeldaten_Export_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            
+            link.click();
+            
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        })
+        .catch(err => {
+            console.error("Export-Fehler:", err);
+            alert("Fehler beim Herunterladen der CSV-Datei aus Google Sheets!");
+        });
 }
