@@ -53,19 +53,19 @@
             </div>
 
             <!-- Formular klappt nach Auswahl des Users auf -->
-            <div id="manual-time-form" class="hidden" style="background: #f9f9f9; padding: 12px; border-radius: 6px; border: 1px solid #ddd; margin-top: 10px;">
-                <h4 id="manual-selected-user-header" style="margin-top: 0; margin-bottom: 10px;"></h4>
-                
-                <label style="font-size: 12px; font-weight: bold;">Datum:</label>
-                <input type="date" id="manual-date" style="margin-bottom: 8px;">
+           <div id="manual-time-form" class="hidden" style="display: none; background: #f9f9f9; padding: 12px; border-radius: 6px; border: 1px solid #ddd; margin-top: 10px;">
+            <h4 id="manual-selected-user-header" style="margin-top: 0; margin-bottom: 10px;"></h4>
+    
+            <label style="font-size: 12px; font-weight: bold; display: block; margin-top: 5px;">Datum:</label>
+            <input type="date" id="manual-date" style="margin-bottom: 8px; width: 100%;">
 
-                <label style="font-size: 12px; font-weight: bold;">Arbeitsbeginn (HH:MM):</label>
-                <input type="time" id="manual-start-time" style="margin-bottom: 8px;">
+            <label style="font-size: 12px; font-weight: bold; display: block; margin-top: 5px;">Arbeitsbeginn (HH:MM):</label>
+            <input type="time" id="manual-start-time" style="margin-bottom: 8px; width: 100%;">
 
-                <label style="font-size: 12px; font-weight: bold;">Arbeitsende (HH:MM):</label>
-                <input type="time" id="manual-end-time" style="margin-bottom: 12px;">
+            <label style="font-size: 12px; font-weight: bold; display: block; margin-top: 5px;">Arbeitsende (HH:MM):</label>
+            <input type="time" id="manual-end-time" style="margin-bottom: 12px; width: 100%;">
 
-                <button type="button" onclick="submitManualTime()" class="btn btn-success">Zeiten Speichern</button>
+            <button type="button" onclick="submitManualTime()" class="btn btn-success">Zeiten Speichern</button>
             </div>
 
             <hr>
