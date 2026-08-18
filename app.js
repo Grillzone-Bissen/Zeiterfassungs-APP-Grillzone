@@ -182,14 +182,20 @@ function deleteUser(nr) {
 // MANUELLE ZEITERFASSUNG (Nur Admin 99)
 // =========================================================
 function openManualTimeForm() {
-    const nrInput = document.getElementById('manual-user-nr').value.trim();
+    const inputEl = document.getElementById('manual-user-nr');
+    if (!inputEl) return;
+
+    const nrInput = inputEl.value.trim();
     if (!nrInput) {
         alert("Bitte eine Personalnummer eingeben!");
         return;
     }
 
     let users = JSON.parse(localStorage.getItem('users') || '{}');
-    let targetUser = users[nrInput];
+    
+    // Typsicherer Abgleich: Suchen nach passendem Schlüssel
+    let foundKey = Object.keys(users).find(key => String(key).trim() === String(nrInput));
+    let targetUser = foundKey ? users[foundKey] : null;
 
     if (!targetUser) {
         alert(`Mitarbeiter mit Personalnummer ${nrInput} wurde nicht gefunden!`);
@@ -197,26 +203,43 @@ function openManualTimeForm() {
     }
 
     selectedManualUser = targetUser;
-    document.getElementById('manual-selected-user-header').innerText = `Manuelle Erfassung für: ${targetUser.name} (Nr. ${targetUser.nr})`;
-    
-    // Heutiges Datum als Standard setzen
-    const today = new Date().toISOString().slice(0, 10);
-    document.getElementById('manual-date').value = today;
+
+    const headerEl = document.getElementById('manual-selected-user-header');
+    if (headerEl) {
+        headerEl.innerText = `Manuelle Erfassung für: ${targetUser.name} (Nr. ${targetUser.nr})`;
+    }
+
+    // Heutiges Datum als Standard setzen (YYYY-MM-DD)
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = now.getFullYear();
+    const todayStr = `${year}-${month}-${day}`;
+
+    document.getElementById('manual-date').value = todayStr;
     document.getElementById('manual-start-time').value = "08:00";
     document.getElementById('manual-end-time').value = "16:30";
 
-    document.getElementById('manual-time-form').classList.remove('hidden');
+    // Formular direkt einblenden über Inline-Style
+    const formEl = document.getElementById('manual-time-form');
+    if (formEl) {
+        formEl.classList.remove('hidden');
+        formEl.style.display = 'block';
+    }
 }
 
 function submitManualTime() {
-    if (!selectedManualUser) return;
+    if (!selectedManualUser) {
+        alert("Kein Mitarbeiter ausgewählt!");
+        return;
+    }
 
     const rawDate = document.getElementById('manual-date').value;
     const startTime = document.getElementById('manual-start-time').value;
     const endTime = document.getElementById('manual-end-time').value;
 
     if (!rawDate || !startTime || !endTime) {
-        alert("Bitte Datum, Arbeitsbeginn und Arbeitsende vollständigen ausfüllen!");
+        alert("Bitte Datum, Arbeitsbeginn und Arbeitsende vollständig ausfüllen!");
         return;
     }
 
@@ -224,29 +247,27 @@ function submitManualTime() {
     const dateParts = rawDate.split('-');
     const formattedDate = `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`;
 
-    // Sekunden anfügen für einheitliches Format HH:MM:SS
-    const formattedStart = `${startTime}:00`;
-    const formattedEnd = `${endTime}:00`;
+    // Sekunden anfügen (HH:MM:SS)
+    const formattedStart = startTime.length === 5 ? `${startTime}:00` : startTime;
+    const formattedEnd = endTime.length === 5 ? `${endTime}:00` : endTime;
 
-    // 1. Arbeitsbeginn senden
     const startEntry = {
-        personalNr: selectedManualUser.nr,
+        personalNr: String(selectedManualUser.nr),
         name: selectedManualUser.name,
         action: "Arbeitsbeginn",
         date: formattedDate,
         time: formattedStart
     };
 
-    // 2. Arbeitsende senden
     const endEntry = {
-        personalNr: selectedManualUser.nr,
+        personalNr: String(selectedManualUser.nr),
         name: selectedManualUser.name,
         action: "Arbeitsende",
         date: formattedDate,
         time: formattedEnd
     };
 
-    // An Google Sheets senden (nacheinander)
+    // Daten nacheinander an Google Sheets senden
     fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
         mode: 'no-cors',
@@ -263,7 +284,12 @@ function submitManualTime() {
     })
     .then(() => {
         alert(`Zeiten für ${selectedManualUser.name} erfolgreich nachgetragen!`);
-        document.getElementById('manual-time-form').classList.add('hidden');
+        
+        const formEl = document.getElementById('manual-time-form');
+        if (formEl) {
+            formEl.style.display = 'none';
+            formEl.classList.add('hidden');
+        }
         document.getElementById('manual-user-nr').value = '';
         selectedManualUser = null;
     })
