@@ -1,16 +1,14 @@
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZiQRnGGRgJu4YKhjaoNcnDfrtWaInzjw9yzL1wu8reOR3iGE_rqG1FyyUi3E-xAh_/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzMUIZJmCpYpW0Mnaebqx6uM2qmgyv8OMFv2Ch49f888y4PVIVFLxyrXUcNbFU1ViBW/exec";
 
 let currentUser = null;
 
-// Beim Start Admin (99) sicherstellen
+// Admin (99) beim Laden der Seite im Speicher garantieren
 window.addEventListener('DOMContentLoaded', () => {
     initUsers();
 });
 
 function initUsers() {
     let users = JSON.parse(localStorage.getItem('users') || '{}');
-    
-    // Falls 99 fehlt, Admin automatisch erzeugen
     if (!users['99']) {
         users['99'] = { nr: '99', name: 'Administrator', isAdmin: true };
         localStorage.setItem('users', JSON.stringify(users));
@@ -31,14 +29,14 @@ function login() {
     }
 
     let users = JSON.parse(localStorage.getItem('users') || '{}');
-    let user = users[nrInput];
 
-    // FALLBACK FÜR ADMIN 99: Falls aus irgendeinem Grund gelöscht
+    // Sicherstellen, dass 99 immer als Admin vorhanden ist
     if (nrInput === '99') {
-        user = { nr: '99', name: 'Administrator', isAdmin: true };
-        users['99'] = user;
+        users['99'] = { nr: '99', name: 'Administrator', isAdmin: true };
         localStorage.setItem('users', JSON.stringify(users));
     }
+
+    let user = users[nrInput];
 
     if (!user) {
         errorMsg.innerText = `Personalnummer ${nrInput} nicht gefunden!`;
@@ -50,7 +48,7 @@ function login() {
     // Login-Maske ausblenden
     document.getElementById('login-view').classList.add('hidden');
 
-    // UNTERSCHEIDUNG: ADMIN (99) vs. MITARBEITER
+    // Unterscheidung Admin vs. Mitarbeiter
     if (currentUser.nr === '99') {
         document.getElementById('admin-view').classList.remove('hidden');
         renderUserList();
@@ -75,10 +73,7 @@ function logout() {
 // STEMPEL-FUNKTION (Mitarbeiter)
 // =========================================================
 function stamp(type) {
-    if (!currentUser) {
-        alert("Bitte zuerst anmelden!");
-        return;
-    }
+    if (!currentUser) return;
 
     const now = new Date();
     const entry = {
@@ -97,17 +92,12 @@ function stamp(type) {
         headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify(entry)
     })
-    .then(() => {
-        alert(`Erfolgreich gestempelt: ${type}`);
-    })
-    .catch(err => {
-        console.error('Fehler beim Senden:', err);
-        alert('Fehler beim Übertragen an Google Sheets!');
-    });
+    .then(() => alert(`Erfolgreich gestempelt: ${type}`))
+    .catch(err => alert('Fehler beim Übertragen!'));
 }
 
 // =========================================================
-// ADMIN-FUNKTIONEN (User anlegen)
+// ADMIN-FUNKTIONEN (User anlegen, auflisten & löschen)
 // =========================================================
 function createUser() {
     const nameInput = document.getElementById('new-name').value.trim();
@@ -119,41 +109,56 @@ function createUser() {
     }
 
     if (nrInput === '99') {
-        alert("Die Nummer 99 ist als Admin reserviert!");
+        alert("Die 99 ist als Admin reserviert!");
         return;
     }
 
     let users = JSON.parse(localStorage.getItem('users') || '{}');
-
-    users[nrInput] = {
-        nr: nrInput,
-        name: nameInput
-    };
-
+    users[nrInput] = { nr: nrInput, name: nameInput };
     localStorage.setItem('users', JSON.stringify(users));
 
-    alert(`User "${nameInput}" mit Personalnummer ${nrInput} angelegt!`);
+    alert(`User "${nameInput}" (Nr. ${nrInput}) angelegt!`);
 
     document.getElementById('new-name').value = '';
     document.getElementById('new-nr').value = '';
-
     renderUserList();
 }
 
+// Mitarbeiter in der Liste anzeigen (inkl. Löschen-Button)
 function renderUserList() {
     const listEl = document.getElementById('user-list-container');
     listEl.innerHTML = '';
 
     let users = JSON.parse(localStorage.getItem('users') || '{}');
-
+    
     Object.keys(users).forEach(nr => {
         if (nr !== '99') {
             const li = document.createElement('li');
-            li.style.marginBottom = '5px';
-            li.innerText = `Nr. ${nr}: ${users[nr].name}`;
+            li.style.display = 'flex';
+            li.style.justifyContent = 'space-between';
+            li.style.alignItems = 'center';
+            li.style.padding = '8px 0';
+            li.style.borderBottom = '1px solid #eee';
+
+            li.innerHTML = `
+                <span><strong>Nr. ${nr}:</strong> ${users[nr].name}</span>
+                <button onclick="deleteUser('${nr}')" class="btn btn-danger" style="width: auto; padding: 4px 10px; margin: 0; font-size: 12px;">Löschen</button>
+            `;
             listEl.appendChild(li);
         }
     });
+}
+
+// User löschen
+function deleteUser(nr) {
+    let users = JSON.parse(localStorage.getItem('users') || '{}');
+    let userName = users[nr] ? users[nr].name : nr;
+
+    if (confirm(`Möchtest du den User "${userName}" (Nr. ${nr}) wirklich löschen?`)) {
+        delete users[nr];
+        localStorage.setItem('users', JSON.stringify(users));
+        renderUserList();
+    }
 }
 
 function exportCSV() {
