@@ -1,6 +1,7 @@
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxILO_m7PVf3J3fW6dtjemzfT1LK5L4lDp3s3iK_dZl-mCmxfkKHrynKalJUn-ERnPcTw/exec";
 
 let currentUser = null;
+let selectedManualUser = null;
 
 window.addEventListener('DOMContentLoaded', () => {
     initUsers();
@@ -34,7 +35,6 @@ function login() {
 
     let users = JSON.parse(localStorage.getItem('users') || '{}');
 
-    // Admin 99 Fallback
     if (nrInput === '99') {
         users['99'] = { nr: '99', name: 'Administrator', isAdmin: true };
         localStorage.setItem('users', JSON.stringify(users));
@@ -62,11 +62,16 @@ function login() {
 
 function logout() {
     currentUser = null;
+    selectedManualUser = null;
     const inputEl = document.getElementById('personal-nr-input');
     const errorMsg = document.getElementById('login-error-msg');
     
     if (inputEl) inputEl.value = '';
     if (errorMsg) errorMsg.innerText = '';
+
+    // Manuelles Formular zurücksetzen
+    const manualForm = document.getElementById('manual-time-form');
+    if (manualForm) manualForm.classList.add('hidden');
 
     document.getElementById('time-view').classList.add('hidden');
     document.getElementById('admin-view').classList.add('hidden');
@@ -171,6 +176,101 @@ function deleteUser(nr) {
         localStorage.setItem('users', JSON.stringify(users));
         renderUserList();
     }
+}
+
+// =========================================================
+// MANUELLE ZEITERFASSUNG (Nur Admin 99)
+// =========================================================
+function openManualTimeForm() {
+    const nrInput = document.getElementById('manual-user-nr').value.trim();
+    if (!nrInput) {
+        alert("Bitte eine Personalnummer eingeben!");
+        return;
+    }
+
+    let users = JSON.parse(localStorage.getItem('users') || '{}');
+    let targetUser = users[nrInput];
+
+    if (!targetUser) {
+        alert(`Mitarbeiter mit Personalnummer ${nrInput} wurde nicht gefunden!`);
+        return;
+    }
+
+    selectedManualUser = targetUser;
+    document.getElementById('manual-selected-user-header').innerText = `Manuelle Erfassung für: ${targetUser.name} (Nr. ${targetUser.nr})`;
+    
+    // Heutiges Datum als Standard setzen
+    const today = new Date().toISOString().slice(0, 10);
+    document.getElementById('manual-date').value = today;
+    document.getElementById('manual-start-time').value = "08:00";
+    document.getElementById('manual-end-time').value = "16:30";
+
+    document.getElementById('manual-time-form').classList.remove('hidden');
+}
+
+function submitManualTime() {
+    if (!selectedManualUser) return;
+
+    const rawDate = document.getElementById('manual-date').value;
+    const startTime = document.getElementById('manual-start-time').value;
+    const endTime = document.getElementById('manual-end-time').value;
+
+    if (!rawDate || !startTime || !endTime) {
+        alert("Bitte Datum, Arbeitsbeginn und Arbeitsende vollständigen ausfüllen!");
+        return;
+    }
+
+    // Datum in DD.MM.YYYY umwandeln
+    const dateParts = rawDate.split('-');
+    const formattedDate = `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`;
+
+    // Sekunden anfügen für einheitliches Format HH:MM:SS
+    const formattedStart = `${startTime}:00`;
+    const formattedEnd = `${endTime}:00`;
+
+    // 1. Arbeitsbeginn senden
+    const startEntry = {
+        personalNr: selectedManualUser.nr,
+        name: selectedManualUser.name,
+        action: "Arbeitsbeginn",
+        date: formattedDate,
+        time: formattedStart
+    };
+
+    // 2. Arbeitsende senden
+    const endEntry = {
+        personalNr: selectedManualUser.nr,
+        name: selectedManualUser.name,
+        action: "Arbeitsende",
+        date: formattedDate,
+        time: formattedEnd
+    };
+
+    // An Google Sheets senden (nacheinander)
+    fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(startEntry)
+    })
+    .then(() => {
+        return fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify(endEntry)
+        });
+    })
+    .then(() => {
+        alert(`Zeiten für ${selectedManualUser.name} erfolgreich nachgetragen!`);
+        document.getElementById('manual-time-form').classList.add('hidden');
+        document.getElementById('manual-user-nr').value = '';
+        selectedManualUser = null;
+    })
+    .catch(err => {
+        console.error("Fehler beim Nachtragen:", err);
+        alert("Fehler beim Übertragen an Google Sheets!");
+    });
 }
 
 // CORS-Sicherer CSV Export ohne AJAX-Sperre
