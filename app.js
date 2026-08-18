@@ -1,8 +1,8 @@
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZiQRnGGRgJu4YKhjaoNcnDfrtWaInzjw9yzL1wu8reOR3iGE_rqG1FyyUi3E-xAh_/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwGbgSXrteqU2YhomApyjRVqswqkY-AOAi4yIcMXmgbeNpI9LTdL5235T9qEJF4_VIbLQ/exec";
 
 let currentUser = null;
 
-// Admin (99) beim Laden der Seite im Speicher garantieren
+// Admin (99) beim Laden im Speicher sicherstellen
 window.addEventListener('DOMContentLoaded', () => {
     initUsers();
 });
@@ -30,7 +30,6 @@ function login() {
 
     let users = JSON.parse(localStorage.getItem('users') || '{}');
 
-    // Sicherstellen, dass 99 immer als Admin vorhanden ist
     if (nrInput === '99') {
         users['99'] = { nr: '99', name: 'Administrator', isAdmin: true };
         localStorage.setItem('users', JSON.stringify(users));
@@ -44,11 +43,8 @@ function login() {
     }
 
     currentUser = user;
-
-    // Login-Maske ausblenden
     document.getElementById('login-view').classList.add('hidden');
 
-    // Unterscheidung Admin vs. Mitarbeiter
     if (currentUser.nr === '99') {
         document.getElementById('admin-view').classList.remove('hidden');
         renderUserList();
@@ -70,7 +66,7 @@ function logout() {
 }
 
 // =========================================================
-// STEMPEL-FUNKTION (Mitarbeiter)
+// STEMPEL-FUNKTION (Senden an Google Sheets)
 // =========================================================
 function stamp(type) {
     if (!currentUser) return;
@@ -84,8 +80,14 @@ function stamp(type) {
         time: now.toLocaleTimeString('de-DE')
     };
 
+    // Lokale Sicherung für den Fall der Fälle
+    let history = JSON.parse(localStorage.getItem('stampHistory') || '[]');
+    history.push(entry);
+    localStorage.setItem('stampHistory', JSON.stringify(history));
+
     document.getElementById('status-msg').innerText = `Status: ${type} um ${entry.time} Uhr`;
 
+    // Senden an Google Sheets
     fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
         mode: 'no-cors',
@@ -93,7 +95,10 @@ function stamp(type) {
         body: JSON.stringify(entry)
     })
     .then(() => alert(`Erfolgreich gestempelt: ${type}`))
-    .catch(err => alert('Fehler beim Übertragen!'));
+    .catch(err => {
+        console.error('Fehler:', err);
+        alert('Fehler beim Übertragen!');
+    });
 }
 
 // =========================================================
@@ -124,7 +129,6 @@ function createUser() {
     renderUserList();
 }
 
-// Mitarbeiter in der Liste anzeigen (inkl. Löschen-Button)
 function renderUserList() {
     const listEl = document.getElementById('user-list-container');
     listEl.innerHTML = '';
@@ -149,7 +153,6 @@ function renderUserList() {
     });
 }
 
-// User löschen
 function deleteUser(nr) {
     let users = JSON.parse(localStorage.getItem('users') || '{}');
     let userName = users[nr] ? users[nr].name : nr;
@@ -161,6 +164,34 @@ function deleteUser(nr) {
     }
 }
 
+// =========================================================
+// CSV EXPORT (Aus lokaler Sicherung)
+// =========================================================
 function exportCSV() {
-    alert("CSV-Export gestartet.");
+    let history = JSON.parse(localStorage.getItem('stampHistory') || '[]');
+    
+    if (history.length === 0) {
+        alert("Keine Stempeldaten im lokalen Speicher vorhanden!");
+        return;
+    }
+
+    let csvContent = "\uFEFF"; // UTF-8 BOM
+    csvContent += "Datum;Uhrzeit;Personalnummer;Name;Aktion\n";
+
+    history.forEach(item => {
+        let cleanName = item.name.replace(/;/g, ",");
+        csvContent += `${item.date};${item.time};${item.personalNr};${cleanName};${item.action}\n`;
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Stempeldaten_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
 }
