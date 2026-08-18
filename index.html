@@ -14,23 +14,21 @@
             <h2>Zeiterfassung Login</h2>
             <form id="login-form" onsubmit="handleLoginSubmit(event)">
                 <input type="text" id="personal-nr-input" placeholder="Personalnummer eingeben" autofocus autocomplete="off">
-                <button type="submit" class="btn btn-primary">Einloggen</button>
-            </form>
-
-            <!-- PIN-Abfrage (Nur für Admin 99) -->
-            <div id="admin-pin-container" class="hidden" style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
-                <label style="font-weight: bold; font-size: 14px; display: block; margin-bottom: 5px;">Admin PIN erforderlich:</label>
-                <div style="display: flex; gap: 8px;">
-                    <input type="password" id="admin-pin-input" placeholder="PIN (Standard: 1234)" style="margin: 0;" autocomplete="off">
-                    <button type="button" onclick="verifyAdminPin()" class="btn btn-success" style="width: auto; margin: 0; white-space: nowrap;">Bestätigen</button>
+                
+                <!-- PIN-Abfrage (Nur für Admin 99) -->
+                <div id="admin-pin-container" style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
+                    <label style="font-weight: bold; font-size: 14px; display: block; margin-bottom: 5px;">Admin PIN erforderlich:</label>
+                    <input type="password" id="admin-pin-input" placeholder="PIN (Standard: 1234)" style="margin-bottom: 10px;" autocomplete="off">
                 </div>
-            </div>
+
+                <button type="submit" id="login-submit-btn" class="btn btn-primary">Einloggen</button>
+            </form>
 
             <p id="login-error-msg" style="color: red; margin-top: 10px;"></p>
         </div>
 
         <!-- EBENE 2A: MITARBEITER-ZEITERFASSUNG -->
-        <div id="time-view" class="card hidden">
+        <div id="time-view" class="card hidden" style="display: none;">
             <h2 id="welcome-msg">Willkommen!</h2>
             <p id="status-msg">Status: Bereit</p>
             
@@ -45,7 +43,7 @@
         </div>
 
         <!-- EBENE 2B: ADMIN-BEREICH (Nur mit Nr. 99 & PIN) -->
-        <div id="admin-view" class="card hidden">
+        <div id="admin-view" class="card hidden" style="display: none;">
             <h2>Admin-Bereich</h2>
             <p id="admin-welcome-msg">Angemeldet als Administrator (99)</p>
             
@@ -62,7 +60,7 @@
                 <button type="button" onclick="openManualTimeForm()" class="btn btn-primary" style="width: auto; margin: 0; white-space: nowrap;">Mitarbeiter wählen</button>
             </div>
 
-            <div id="manual-time-form" class="hidden" style="display: none; background: #f9f9f9; padding: 12px; border-radius: 6px; border: 1px solid #ddd; margin-top: 10px;">
+            <div id="manual-time-form" style="display: none; background: #f9f9f9; padding: 12px; border-radius: 6px; border: 1px solid #ddd; margin-top: 10px;">
                 <h4 id="manual-selected-user-header" style="margin-top: 0; margin-bottom: 10px;"></h4>
                 
                 <label style="font-size: 12px; font-weight: bold; display: block; margin-top: 5px;">Datum:</label>
@@ -93,6 +91,6 @@
         </div>
 
     </div>
-    <script src="app.js?v=7"></script>
+    <script src="app.js?v=9"></script>
 </body>
 </html>
