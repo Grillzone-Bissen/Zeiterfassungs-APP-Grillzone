@@ -1,4 +1,4 @@
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyamDK3-2b5uW9wTqkQ5KllETecaL8aeRuKuDMEGQbYdpa2qF1zG1K_iwsq_SHSDe5A/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyd4LzRP-xT_C-yKRSa5aA-DA29qDfGD-X4AwbSinEvaXDwf3RPEaUfiiKu-c7lLlEi/exec";
 
 let currentUser = null;
 const ADMIN_CODE = "99";
