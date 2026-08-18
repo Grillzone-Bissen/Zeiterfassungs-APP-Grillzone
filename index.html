@@ -7,30 +7,35 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-    <div id="login-container" class="card">
-        <h2>Zeiterfassung Login</h2>
-        <input type="number" id="login-nr" placeholder="Personalnummer (z. B. 99)" autofocus>
-        <input type="password" id="login-pin" placeholder="PIN / Passwort">
-        <button onclick="login()">Anmelden</button>
-        <p id="login-msg" class="error-text"></p>
-    </div>
-
-    <!-- Hauptbereich der App (erst nach Login sichtbar) -->
-    <div id="app-container" class="card" style="display: none;">
-        <h2 id="welcome-user">Willkommen</h2>
-        
-        <div class="button-group">
-            <button onclick="stamp('Arbeitsbeginn')" class="btn-start">Arbeitsbeginn</button>
-            <button onclick="stamp('Arbeitsende')" class="btn-end">Arbeitsende</button>
+    <div class="app-container">
+        <!-- SEITE 1: LOGIN -->
+        <div id="login-view" class="card">
+            <h2>Zeiterfassung Login</h2>
+            <input type="text" id="personal-nr-input" placeholder="Personalnummer eingeben">
+            <button onclick="login()" class="btn btn-primary">Einloggen</button>
+            <hr>
+            <h3>Neuen User anlegen</h3>
+            <input type="text" id="new-name" placeholder="Name">
+            <input type="text" id="new-nr" placeholder="Personalnummer">
+            <button onclick="createUser()" class="btn btn-secondary">User Speichern</button>
         </div>
 
-        <p id="status-msg"></p>
+        <!-- SEITE 2: ZEITERFASSUNG -->
+        <div id="time-view" class="card hidden">
+            <h2 id="welcome-msg"></h2>
+            <p id="status-msg">Status: Bereit</p>
+            
+            <div class="button-group">
+                <button onclick="stamp('Arbeitsbeginn')" class="btn btn-success">Arbeitsbeginn</button>
+                <button onclick="stamp('Pause')" class="btn btn-warning">Pause</button>
+                <button onclick="stamp('Arbeitsende')" class="btn btn-danger">Arbeitsende</button>
+            </div>
 
-        <button onclick="openManualStampModal()" class="btn-secondary">Nachträglich stempeln</button>
-        <button onclick="logout()" class="btn-logout">Abmelden</button>
+            <hr>
+            <button onclick="exportCSV()" class="btn btn-info">CSV Daten Exportieren</button>
+            <button onclick="logout()" class="btn btn-outline">Abmelden</button>
+        </div>
     </div>
-
     <script src="app.js"></script>
 </body>
 </html>
