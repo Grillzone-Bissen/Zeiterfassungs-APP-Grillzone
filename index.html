@@ -46,6 +46,29 @@
             <button type="button" onclick="createUser()" class="btn btn-secondary">User Speichern</button>
 
             <hr>
+            <h3>Manuelle Zeiterfassung</h3>
+            <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                <input type="text" id="manual-user-nr" placeholder="Personalnummer eingeben" style="margin: 0;">
+                <button type="button" onclick="openManualTimeForm()" class="btn btn-primary" style="width: auto; margin: 0; white-space: nowrap;">Mitarbeiter wählen</button>
+            </div>
+
+            <!-- Formular klappt nach Auswahl des Users auf -->
+            <div id="manual-time-form" class="hidden" style="background: #f9f9f9; padding: 12px; border-radius: 6px; border: 1px solid #ddd; margin-top: 10px;">
+                <h4 id="manual-selected-user-header" style="margin-top: 0; margin-bottom: 10px;"></h4>
+                
+                <label style="font-size: 12px; font-weight: bold;">Datum:</label>
+                <input type="date" id="manual-date" style="margin-bottom: 8px;">
+
+                <label style="font-size: 12px; font-weight: bold;">Arbeitsbeginn (HH:MM):</label>
+                <input type="time" id="manual-start-time" style="margin-bottom: 8px;">
+
+                <label style="font-size: 12px; font-weight: bold;">Arbeitsende (HH:MM):</label>
+                <input type="time" id="manual-end-time" style="margin-bottom: 12px;">
+
+                <button type="button" onclick="submitManualTime()" class="btn btn-success">Zeiten Speichern</button>
+            </div>
+
+            <hr>
             <h3>Mitarbeiterliste</h3>
             <ul id="user-list-container" style="list-style: none; padding: 0;"></ul>
 
@@ -55,6 +78,6 @@
         </div>
 
     </div>
-    <script src="app.js?v=3"></script>
+    <script src="app.js?v=4"></script>
 </body>
 </html>
