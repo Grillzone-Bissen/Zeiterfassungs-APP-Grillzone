@@ -1,8 +1,8 @@
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzMUIZJmCpYpW0Mnaebqx6uM2qmgyv8OMFv2Ch49f888y4PVIVFLxyrXUcNbFU1ViBW/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZiQRnGGRgJu4YKhjaoNcnDfrtWaInzjw9yzL1wu8reOR3iGE_rqG1FyyUi3E-xAh_/exec";
 
 let currentUser = null;
 
-// Beim Aufruf der Seite Admin voranlegen
+// Beim Starten bestehende User laden oder Admin anlegen
 window.addEventListener('DOMContentLoaded', () => {
     initUsers();
 });
@@ -10,7 +10,7 @@ window.addEventListener('DOMContentLoaded', () => {
 function initUsers() {
     let users = JSON.parse(localStorage.getItem('users') || '{}');
     
-    // Falls noch gar kein Admin angelegt ist (99)
+    // Admin (99) voranlegen
     if (!users['99']) {
         users['99'] = { nr: '99', name: 'Administrator', isAdmin: true };
         localStorage.setItem('users', JSON.stringify(users));
@@ -40,16 +40,14 @@ function login() {
 
     currentUser = user;
 
-    // Login-Maske ausblenden
+    // Login-Karte ausblenden
     document.getElementById('login-view').classList.add('hidden');
 
-    // WENN ADMIN (99) -> ADMIN-OBERFLÄCHE ÖFFNEN
+    // Unterscheidung: Admin vs. Mitarbeiter
     if (currentUser.nr === '99') {
         document.getElementById('admin-view').classList.remove('hidden');
         renderUserList();
-    } 
-    // SONST -> MITARBEITER-OBERFLÄCHE ÖFFNEN
-    else {
+    } else {
         document.getElementById('time-view').classList.remove('hidden');
         document.getElementById('welcome-msg').innerText = `Willkommen, ${currentUser.name}!`;
         document.getElementById('status-msg').innerText = "Status: Bereit";
@@ -61,14 +59,13 @@ function logout() {
     document.getElementById('personal-nr-input').value = '';
     document.getElementById('login-error-msg').innerText = '';
 
-    // Alle Spezialbereiche ausblenden und Login einblenden
     document.getElementById('time-view').classList.add('hidden');
     document.getElementById('admin-view').classList.add('hidden');
     document.getElementById('login-view').classList.remove('hidden');
 }
 
 // =========================================================
-// STEMPEL-FUNKTION (Senden an Google Sheets)
+// STEMPEL-FUNKTION (Mitarbeiter)
 // =========================================================
 function stamp(type) {
     if (!currentUser) {
@@ -103,7 +100,7 @@ function stamp(type) {
 }
 
 // =========================================================
-// ADMIN-FUNKTIONEN (User anlegen & Liste anzeigen)
+// ADMIN-FUNKTIONEN (User anlegen)
 // =========================================================
 function createUser() {
     const nameInput = document.getElementById('new-name').value.trim();
