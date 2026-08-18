@@ -8,21 +8,18 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- SEITE 1: LOGIN -->
+
+        <!-- MASK 1: LOGIN (Für alle) -->
         <div id="login-view" class="card">
             <h2>Zeiterfassung Login</h2>
-            <input type="text" id="personal-nr-input" placeholder="Personalnummer eingeben">
+            <input type="number" id="personal-nr-input" placeholder="Personalnummer eingeben" autofocus>
             <button onclick="login()" class="btn btn-primary">Einloggen</button>
-            <hr>
-            <h3>Neuen User anlegen</h3>
-            <input type="text" id="new-name" placeholder="Name">
-            <input type="text" id="new-nr" placeholder="Personalnummer">
-            <button onclick="createUser()" class="btn btn-secondary">User Speichern</button>
+            <p id="login-error-msg" style="color: red; margin-top: 10px;"></p>
         </div>
 
-        <!-- SEITE 2: ZEITERFASSUNG -->
+        <!-- MASKE 2: MITARBEITER-ZEITERFASSUNG -->
         <div id="time-view" class="card hidden">
-            <h2 id="welcome-msg"></h2>
+            <h2 id="welcome-msg">Willkommen!</h2>
             <p id="status-msg">Status: Bereit</p>
             
             <div class="button-group">
@@ -32,9 +29,29 @@
             </div>
 
             <hr>
+            <button onclick="logout()" class="btn btn-outline">Abmelden</button>
+        </div>
+
+        <!-- MASKE 3: ADMIN-OBERFLÄCHE (Nur für Nummer 99) -->
+        <div id="admin-view" class="card hidden">
+            <h2>Admin-Bereich</h2>
+            <p id="admin-welcome-msg">Angemeldet als Administrator (99)</p>
+            
+            <hr>
+            <h3>Neuen User anlegen</h3>
+            <input type="text" id="new-name" placeholder="Name (z. B. Max)">
+            <input type="number" id="new-nr" placeholder="Personalnummer (1-98)">
+            <button onclick="createUser()" class="btn btn-secondary">User Speichern</button>
+
+            <hr>
+            <h3>Mitarbeiterliste</h3>
+            <ul id="user-list-container"></ul>
+
+            <hr>
             <button onclick="exportCSV()" class="btn btn-info">CSV Daten Exportieren</button>
             <button onclick="logout()" class="btn btn-outline">Abmelden</button>
         </div>
+
     </div>
     <script src="app.js"></script>
 </body>
