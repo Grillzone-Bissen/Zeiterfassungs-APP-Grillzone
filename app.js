@@ -1,8 +1,7 @@
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxg3hHeYpYHmSqzFeodHdOGF2xmrSHMURsKsXm_XCH5GH9nMF15ORRbNYxoMkwRwmM0/exec";
-                            
 let currentUser = null;
 const ADMIN_CODE = "99";
 
+// Initialisiere Standard-Admin im LocalStorage, falls noch gar keine User existieren
 function initAdmin() {
     let users = JSON.parse(localStorage.getItem('users') || '{}');
     if (!users[ADMIN_CODE]) {
@@ -10,15 +9,21 @@ function initAdmin() {
         localStorage.setItem('users', JSON.stringify(users));
     }
 }
+
+// Beim Aufruf der App sofort den Speicher prüfen/initialisieren
 initAdmin();
 
+// Login-Funktion
 function login() {
     const nrInput = document.getElementById('personal-nr-input');
     if (!nrInput) return;
     
     const nr = nrInput.value.trim();
-    if (!nr) return alert('Bitte gib eine Personalnummer ein!');
+    if (!nr) {
+        return alert('Bitte gib eine Personalnummer ein!');
+    }
 
+    // 1. ZUERST explizite Admin-Prüfung (unabhängig vom Zustand des LocalStorage)
     if (nr === ADMIN_CODE) {
         currentUser = { nr: ADMIN_CODE, name: "Administrator", isAdmin: true };
         document.getElementById('login-view').classList.add('hidden');
@@ -27,7 +32,9 @@ function login() {
         return;
     }
 
+    // 2. DANN normale Mitarbeiter-Prüfung aus dem LocalStorage
     let users = JSON.parse(localStorage.getItem('users') || '{}');
+
     if (users[nr]) {
         currentUser = { nr: nr, name: users[nr], isAdmin: false };
         document.getElementById('welcome-msg').innerText = `Hallo, ${currentUser.name}!`;
@@ -38,6 +45,7 @@ function login() {
     }
 }
 
+// Abmelden
 function logout() {
     currentUser = null;
     document.getElementById('personal-nr-input').value = '';
@@ -46,9 +54,11 @@ function logout() {
     document.getElementById('login-view').classList.remove('hidden');
 }
 
+// User anlegen (Nur Admin)
 function createUser() {
     const nameInput = document.getElementById('new-name');
     const nrInput = document.getElementById('new-nr');
+    
     const name = nameInput.value.trim();
     const nr = nrInput.value.trim();
 
@@ -64,15 +74,17 @@ function createUser() {
     alert(`User ${name} (Nr. ${nr}) angelegt!`);
     nameInput.value = '';
     nrInput.value = '';
+    
     renderUserList();
 }
 
+// User-Liste im Adminbereich anzeigen
 function renderUserList() {
     const userListDiv = document.getElementById('user-list');
     let users = JSON.parse(localStorage.getItem('users') || '{}');
     userListDiv.innerHTML = '';
 
-    const keys = Object.keys(users).filter(nr => nr !== ADMIN_CODE);
+    const keys = Object.keys(users).filter(nr => nr !== ADMIN_CODE); // Admin nicht in der Löschliste anzeigen
     if (keys.length === 0) {
         userListDiv.innerHTML = '<p style="color: #666;">Keine regulären Mitarbeiter angelegt.</p>';
         return;
@@ -89,6 +101,7 @@ function renderUserList() {
     });
 }
 
+// User löschen (Nur Admin)
 function deleteUser(nr) {
     if (confirm(`Möchtest du den User mit der Nr. ${nr} wirklich löschen?`)) {
         let users = JSON.parse(localStorage.getItem('users') || '{}');
@@ -98,7 +111,7 @@ function deleteUser(nr) {
     }
 }
 
-// ZEIT STEMPELN UND AN GOOGLE SHEETS SENDEN
+// Zeit stempeln
 function stamp(type) {
     if (!currentUser) return;
     const now = new Date();
@@ -110,28 +123,14 @@ function stamp(type) {
         time: now.toLocaleTimeString('de-DE')
     };
 
-    // 1. Lokales Backup im Browser speichern
     let logs = JSON.parse(localStorage.getItem('timeLogs') || '[]');
     logs.push(entry);
     localStorage.setItem('timeLogs', JSON.stringify(logs));
 
     document.getElementById('status-msg').innerText = `Status: ${type} gespeichert um ${entry.time}`;
-
-    // 2. An Google Sheets senden
-    if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL.startsWith("https://script.google.com")) {
-        fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify(entry)
-        }).then(() => {
-            console.log('Erfolgreich an Google Sheets gesendet.');
-        }).catch(err => {
-            console.error('Fehler beim Senden an Google Sheets:', err);
-        });
-    }
 }
 
+// CSV Exportieren
 function exportCSV() {
     let logs = JSON.parse(localStorage.getItem('timeLogs') || '[]');
     if (logs.length === 0) return alert('Keine Daten zum Exportieren vorhanden!');
