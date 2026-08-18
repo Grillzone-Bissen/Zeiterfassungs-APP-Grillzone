@@ -2,7 +2,7 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzMUIZJmCpYpW
 
 let currentUser = null;
 
-// Beim Starten bestehende User laden oder Admin anlegen
+// Beim Aufruf der Seite Admin voranlegen
 window.addEventListener('DOMContentLoaded', () => {
     initUsers();
 });
@@ -10,50 +10,23 @@ window.addEventListener('DOMContentLoaded', () => {
 function initUsers() {
     let users = JSON.parse(localStorage.getItem('users') || '{}');
     
-    // Falls noch gar kein User existiert, Admin (99) voranlegen
+    // Falls noch gar kein Admin angelegt ist (99)
     if (!users['99']) {
-        users['99'] = { nr: '99', name: 'Administrator' };
+        users['99'] = { nr: '99', name: 'Administrator', isAdmin: true };
         localStorage.setItem('users', JSON.stringify(users));
     }
 }
 
 // =========================================================
-// USER ANLEGEN (Button: "User Speichern")
-// =========================================================
-function createUser() {
-    const nameInput = document.getElementById('new-name').value.trim();
-    const nrInput = document.getElementById('new-nr').value.trim();
-
-    if (!nameInput || !nrInput) {
-        alert("Bitte sowohl Name als auch Personalnummer eingeben!");
-        return;
-    }
-
-    let users = JSON.parse(localStorage.getItem('users') || '{}');
-
-    // Im LocalStorage speichern
-    users[nrInput] = {
-        nr: nrInput,
-        name: nameInput
-    };
-
-    localStorage.setItem('users', JSON.stringify(users));
-
-    alert(`User "${nameInput}" mit Personalnummer ${nrInput} erfolgreich gespeichert!`);
-
-    // Feldeingaben zurücksetzen
-    document.getElementById('new-name').value = '';
-    document.getElementById('new-nr').value = '';
-}
-
-// =========================================================
-// LOGIN / LOGOUT (Button: "Einloggen" & "Abmelden")
+// LOGIN / LOGOUT LOGIK
 // =========================================================
 function login() {
     const nrInput = document.getElementById('personal-nr-input').value.trim();
+    const errorMsg = document.getElementById('login-error-msg');
+    errorMsg.innerText = '';
 
     if (!nrInput) {
-        alert("Bitte Personalnummer eingeben!");
+        errorMsg.innerText = "Bitte Personalnummer eingeben!";
         return;
     }
 
@@ -61,26 +34,36 @@ function login() {
     let user = users[nrInput];
 
     if (!user) {
-        alert(`Personalnummer ${nrInput} wurde nicht gefunden! Bitte zuerst unten anlegen.`);
+        errorMsg.innerText = `Personalnummer ${nrInput} nicht gefunden!`;
         return;
     }
 
     currentUser = user;
 
-    // UI umschalten: Login-Karte ausblenden, Stempel-Karte anzeigen
+    // Login-Maske ausblenden
     document.getElementById('login-view').classList.add('hidden');
-    document.getElementById('time-view').classList.remove('hidden');
 
-    document.getElementById('welcome-msg').innerText = `Willkommen, ${currentUser.name}!`;
-    document.getElementById('status-msg').innerText = "Status: Bereit";
+    // WENN ADMIN (99) -> ADMIN-OBERFLÄCHE ÖFFNEN
+    if (currentUser.nr === '99') {
+        document.getElementById('admin-view').classList.remove('hidden');
+        renderUserList();
+    } 
+    // SONST -> MITARBEITER-OBERFLÄCHE ÖFFNEN
+    else {
+        document.getElementById('time-view').classList.remove('hidden');
+        document.getElementById('welcome-msg').innerText = `Willkommen, ${currentUser.name}!`;
+        document.getElementById('status-msg').innerText = "Status: Bereit";
+    }
 }
 
 function logout() {
     currentUser = null;
     document.getElementById('personal-nr-input').value = '';
-    
-    // UI umschalten: Stempel-Karte ausblenden, Login-Karte anzeigen
+    document.getElementById('login-error-msg').innerText = '';
+
+    // Alle Spezialbereiche ausblenden und Login einblenden
     document.getElementById('time-view').classList.add('hidden');
+    document.getElementById('admin-view').classList.add('hidden');
     document.getElementById('login-view').classList.remove('hidden');
 }
 
@@ -104,7 +87,6 @@ function stamp(type) {
 
     document.getElementById('status-msg').innerText = `Status: ${type} um ${entry.time} Uhr`;
 
-    // Per Fetch an Google Apps Script übertragen
     fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
         mode: 'no-cors',
@@ -121,8 +103,55 @@ function stamp(type) {
 }
 
 // =========================================================
-// CSV EXPORT
+// ADMIN-FUNKTIONEN (User anlegen & Liste anzeigen)
 // =========================================================
+function createUser() {
+    const nameInput = document.getElementById('new-name').value.trim();
+    const nrInput = document.getElementById('new-nr').value.trim();
+
+    if (!nameInput || !nrInput) {
+        alert("Bitte Name und Personalnummer eingeben!");
+        return;
+    }
+
+    if (nrInput === '99') {
+        alert("Die Nummer 99 ist als Admin reserviert!");
+        return;
+    }
+
+    let users = JSON.parse(localStorage.getItem('users') || '{}');
+
+    users[nrInput] = {
+        nr: nrInput,
+        name: nameInput
+    };
+
+    localStorage.setItem('users', JSON.stringify(users));
+
+    alert(`User "${nameInput}" mit Personalnummer ${nrInput} angelegt!`);
+
+    document.getElementById('new-name').value = '';
+    document.getElementById('new-nr').value = '';
+
+    renderUserList();
+}
+
+function renderUserList() {
+    const listEl = document.getElementById('user-list-container');
+    listEl.innerHTML = '';
+
+    let users = JSON.parse(localStorage.getItem('users') || '{}');
+
+    Object.keys(users).forEach(nr => {
+        if (nr !== '99') {
+            const li = document.createElement('li');
+            li.style.marginBottom = '5px';
+            li.innerText = `Nr. ${nr}: ${users[nr].name}`;
+            listEl.appendChild(li);
+        }
+    });
+}
+
 function exportCSV() {
-    alert("CSV-Export-Funktion wird geladen.");
+    alert("CSV-Export gestartet.");
 }
