@@ -2,7 +2,6 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxILO_m7PVf3J
 
 let currentUser = null;
 
-// Admin (99) beim Laden im Speicher sicherstellen
 window.addEventListener('DOMContentLoaded', () => {
     initUsers();
 });
@@ -15,16 +14,16 @@ function initUsers() {
     }
 }
 
-// =========================================================
-// LOGIN / LOGOUT LOGIK
-// =========================================================
 function login() {
-    const nrInput = document.getElementById('personal-nr-input').value.trim();
+    const inputEl = document.getElementById('personal-nr-input');
+    if (!inputEl) return;
+
+    const nrInput = inputEl.value.trim();
     const errorMsg = document.getElementById('login-error-msg');
-    errorMsg.innerText = '';
+    if (errorMsg) errorMsg.innerText = '';
 
     if (!nrInput) {
-        errorMsg.innerText = "Bitte Personalnummer eingeben!";
+        if (errorMsg) errorMsg.innerText = "Bitte Personalnummer eingeben!";
         return;
     }
 
@@ -38,7 +37,7 @@ function login() {
     let user = users[nrInput];
 
     if (!user) {
-        errorMsg.innerText = `Personalnummer ${nrInput} nicht gefunden!`;
+        if (errorMsg) errorMsg.innerText = `Personalnummer ${nrInput} nicht gefunden!`;
         return;
     }
 
@@ -65,15 +64,11 @@ function logout() {
     document.getElementById('login-view').classList.remove('hidden');
 }
 
-// =========================================================
-// STEMPEL-FUNKTION (Senden an Google Sheets)
-// =========================================================
 function stamp(type) {
     if (!currentUser) return;
 
     const now = new Date();
 
-    // Datum & Zeit explizit mit führenden Nullen formatieren (DD.MM.YYYY und HH:MM:SS)
     const day = String(now.getDate()).padStart(2, '0');
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const year = now.getFullYear();
@@ -90,14 +85,12 @@ function stamp(type) {
         time: `${hours}:${minutes}:${seconds}`
     };
 
-    // Lokale Sicherung für den Fall der Fälle
     let history = JSON.parse(localStorage.getItem('stampHistory') || '[]');
     history.push(entry);
     localStorage.setItem('stampHistory', JSON.stringify(history));
 
     document.getElementById('status-msg').innerText = `Status: ${type} um ${entry.time} Uhr`;
 
-    // Senden an Google Sheets
     fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
         mode: 'no-cors',
@@ -111,9 +104,6 @@ function stamp(type) {
     });
 }
 
-// =========================================================
-// ADMIN-FUNKTIONEN (User anlegen, auflisten & löschen)
-// =========================================================
 function createUser() {
     const nameInput = document.getElementById('new-name').value.trim();
     const nrInput = document.getElementById('new-nr').value.trim();
@@ -174,9 +164,6 @@ function deleteUser(nr) {
     }
 }
 
-// =========================================================
-// CSV EXPORT (Direkt aus Google Sheets)
-// =========================================================
 function exportCSV() {
     fetch(GOOGLE_SCRIPT_URL)
         .then(response => response.text())
