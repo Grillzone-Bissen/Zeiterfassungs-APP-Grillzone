@@ -9,10 +9,10 @@
 <body>
     <div class="app-container">
 
-        <!-- EBENE 1: LOGIN (Für alle) -->
+        <!-- EBENE 1: LOGIN -->
         <div id="login-view" class="card">
             <h2>Zeiterfassung Login</h2>
-            <form onsubmit="event.preventDefault(); login();">
+            <form id="login-form" onsubmit="handleLoginSubmit(event)">
                 <input type="text" id="personal-nr-input" placeholder="Personalnummer eingeben" autofocus autocomplete="off">
                 <button type="submit" class="btn btn-primary">Einloggen</button>
             </form>
@@ -25,13 +25,13 @@
             <p id="status-msg">Status: Bereit</p>
             
             <div class="button-group">
-                <button onclick="stamp('Arbeitsbeginn')" class="btn btn-success">Arbeitsbeginn</button>
-                <button onclick="stamp('Pause')" class="btn btn-warning">Pause</button>
-                <button onclick="stamp('Arbeitsende')" class="btn btn-danger">Arbeitsende</button>
+                <button type="button" onclick="stamp('Arbeitsbeginn')" class="btn btn-success">Arbeitsbeginn</button>
+                <button type="button" onclick="stamp('Pause')" class="btn btn-warning">Pause</button>
+                <button type="button" onclick="stamp('Arbeitsende')" class="btn btn-danger">Arbeitsende</button>
             </div>
 
             <hr>
-            <button onclick="logout()" class="btn btn-outline">Abmelden</button>
+            <button type="button" onclick="logout()" class="btn btn-outline">Abmelden</button>
         </div>
 
         <!-- EBENE 2B: ADMIN-BEREICH (Nur mit Nr. 99) -->
@@ -43,19 +43,18 @@
             <h3>Neuen User anlegen</h3>
             <input type="text" id="new-name" placeholder="Name">
             <input type="text" id="new-nr" placeholder="Personalnummer">
-            <button onclick="createUser()" class="btn btn-secondary">User Speichern</button>
+            <button type="button" onclick="createUser()" class="btn btn-secondary">User Speichern</button>
 
             <hr>
             <h3>Mitarbeiterliste</h3>
             <ul id="user-list-container" style="list-style: none; padding: 0;"></ul>
 
             <hr>
-            <button onclick="exportCSV()" class="btn btn-info">CSV Daten Exportieren</button>
-            <button onclick="logout()" class="btn btn-outline">Abmelden</button>
+            <button type="button" onclick="exportCSV()" class="btn btn-info">CSV Daten Exportieren</button>
+            <button type="button" onclick="logout()" class="btn btn-outline">Abmelden</button>
         </div>
 
     </div>
-    <!-- Versionierungs-Parameter ?v=2 zwingt den Browser zum Neuladen der app.js -->
-    <script src="app.js?v=2"></script>
+    <script src="app.js?v=3"></script>
 </body>
 </html>
