@@ -12,8 +12,10 @@
         <!-- EBENE 1: LOGIN (Für alle) -->
         <div id="login-view" class="card">
             <h2>Zeiterfassung Login</h2>
-            <input type="text" id="personal-nr-input" placeholder="Personalnummer eingeben" autofocus>
-            <button onclick="login()" class="btn btn-primary">Einloggen</button>
+            <form onsubmit="event.preventDefault(); login();">
+                <input type="text" id="personal-nr-input" placeholder="Personalnummer eingeben" autofocus autocomplete="off">
+                <button type="submit" class="btn btn-primary">Einloggen</button>
+            </form>
             <p id="login-error-msg" style="color: red; margin-top: 10px;"></p>
         </div>
 
@@ -53,6 +55,7 @@
         </div>
 
     </div>
-    <script src="app.js"></script>
+    <!-- Versionierungs-Parameter ?v=2 zwingt den Browser zum Neuladen der app.js -->
+    <script src="app.js?v=2"></script>
 </body>
 </html>
