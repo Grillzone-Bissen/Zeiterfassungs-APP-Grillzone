@@ -1,4 +1,4 @@
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzMUIZJmCpYpW0Mnaebqx6uM2qmgyv8OMFv2Ch49f888y4PVIVFLxyrXUcNbFU1ViBW/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZiQRnGGRgJu4YKhjaoNcnDfrtWaInzjw9yzL1wu8reOR3iGE_rqG1FyyUi3E-xAh_/exec";
 
 let currentUser = null;
 
