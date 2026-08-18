@@ -1,107 +1,80 @@
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZiQRnGGRgJu4YKhjaoNcnDfrtWaInzjw9yzL1wu8reOR3iGE_rqG1FyyUi3E-xAh_/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzMUIZJmCpYpW0Mnaebqx6uM2qmgyv8OMFv2Ch49f888y4PVIVFLxyrXUcNbFU1ViBW/exec";
 
 let currentUser = null;
-const ADMIN_CODE = "99";
 
-function initAdmin() {
+// Beim Laden der Seite prüfen, ob bereits Benutzer angelegt wurden
+window.addEventListener('DOMContentLoaded', () => {
+    initUsers();
+});
+
+function initUsers() {
     let users = JSON.parse(localStorage.getItem('users') || '{}');
-    if (!users[ADMIN_CODE]) {
-        users[ADMIN_CODE] = "Administrator";
+    // Standard-Admin anlegen, falls noch keine User existieren
+    if (!users['99']) {
+        users['99'] = { nr: '99', name: 'Administrator', pin: '1234', isAdmin: true };
         localStorage.setItem('users', JSON.stringify(users));
     }
 }
-initAdmin();
 
+// =========================================================
+// LOGIN / LOGOUT LOGIK
+// =========================================================
 function login() {
-    const nrInput = document.getElementById('personal-nr-input');
-    if (!nrInput) return;
-    
-    const nr = nrInput.value.trim();
-    if (!nr) return alert('Bitte gib eine Personalnummer ein!');
+    const nrInput = document.getElementById('login-nr').value.trim();
+    const pinInput = document.getElementById('login-pin').value.trim();
+    const msgEl = document.getElementById('login-msg');
 
-    if (nr === ADMIN_CODE) {
-        currentUser = { nr: ADMIN_CODE, name: "Administrator", isAdmin: true };
-        document.getElementById('login-view').classList.add('hidden');
-        document.getElementById('admin-view').classList.remove('hidden');
-        renderUserList();
+    if (!nrInput) {
+        msgEl.innerText = "Bitte Personalnummer eingeben!";
         return;
     }
 
     let users = JSON.parse(localStorage.getItem('users') || '{}');
-    if (users[nr]) {
-        currentUser = { nr: nr, name: users[nr], isAdmin: false };
-        document.getElementById('welcome-msg').innerText = `Hallo, ${currentUser.name}!`;
-        document.getElementById('login-view').classList.add('hidden');
-        document.getElementById('time-view').classList.remove('hidden');
-    } else {
-        alert('Personalnummer nicht gefunden!');
+    let user = users[nrInput];
+
+    if (!user) {
+        // Falls Nummer 99 eingegeben wird, aber aus irgendeinem Grund gelöscht war
+        if (nrInput === '99') {
+            user = { nr: '99', name: 'Administrator', pin: pinInput || '1234', isAdmin: true };
+            users['99'] = user;
+            localStorage.setItem('users', JSON.stringify(users));
+        } else {
+            msgEl.innerText = "Personalnummer nicht gefunden!";
+            return;
+        }
     }
+
+    // PIN-Prüfung (falls PIN gesetzt ist)
+    if (user.pin && user.pin !== pinInput) {
+        msgEl.innerText = "Falsche PIN!";
+        return;
+    }
+
+    // Erfolgreicher Login
+    currentUser = user;
+    document.getElementById('login-container').style.display = 'none';
+    document.getElementById('app-container').style.display = 'block';
+    document.getElementById('welcome-user').innerText = `Willkommen, ${currentUser.name} (${currentUser.nr})`;
+    msgEl.innerText = "";
 }
 
 function logout() {
     currentUser = null;
-    document.getElementById('personal-nr-input').value = '';
-    document.getElementById('time-view').classList.add('hidden');
-    document.getElementById('admin-view').classList.add('hidden');
-    document.getElementById('login-view').classList.remove('hidden');
+    document.getElementById('login-nr').value = "";
+    document.getElementById('login-pin').value = "";
+    document.getElementById('app-container').style.display = 'none';
+    document.getElementById('login-container').style.display = 'block';
 }
 
-function createUser() {
-    const nameInput = document.getElementById('new-name');
-    const nrInput = document.getElementById('new-nr');
-    const name = nameInput.value.trim();
-    const nr = nrInput.value.trim();
-
-    if (!name || !nr) return alert('Bitte Name und Personalnummer eingeben!');
-    if (nr === ADMIN_CODE) return alert('Die Personalnummer 99 ist für den Admin reserviert!');
-
-    let users = JSON.parse(localStorage.getItem('users') || '{}');
-    if (users[nr]) return alert('Diese Personalnummer existiert bereits!');
-
-    users[nr] = name;
-    localStorage.setItem('users', JSON.stringify(users));
-    
-    alert(`User ${name} (Nr. ${nr}) angelegt!`);
-    nameInput.value = '';
-    nrInput.value = '';
-    renderUserList();
-}
-
-function renderUserList() {
-    const userListDiv = document.getElementById('user-list');
-    let users = JSON.parse(localStorage.getItem('users') || '{}');
-    userListDiv.innerHTML = '';
-
-    const keys = Object.keys(users).filter(nr => nr !== ADMIN_CODE);
-    if (keys.length === 0) {
-        userListDiv.innerHTML = '<p style="color: #666;">Keine regulären Mitarbeiter angelegt.</p>';
+// =========================================================
+// STEMPEL-FUNKTION (Senden an Google Sheets)
+// =========================================================
+function stamp(type) {
+    if (!currentUser) {
+        alert("Bitte zuerst anmelden!");
         return;
     }
 
-    keys.forEach(nr => {
-        const item = document.createElement('div');
-        item.className = 'user-item';
-        item.innerHTML = `
-            <span><strong>${users[nr]}</strong> (Nr. ${nr})</span>
-            <button class="btn-delete" onclick="deleteUser('${nr}')">Löschen</button>
-        `;
-        userListDiv.appendChild(item);
-    });
-}
-
-function deleteUser(nr) {
-    if (confirm(`Möchtest du den User mit der Nr. ${nr} wirklich löschen?`)) {
-        let users = JSON.parse(localStorage.getItem('users') || '{}');
-        delete users[nr];
-        localStorage.setItem('users', JSON.stringify(users));
-        renderUserList();
-    }
-}
-
-// ZEIT STEMPELN UND AN GOOGLE SHEETS SENDEN
-function stamp(type) {
-    if (!currentUser) return alert("Bitte zuerst anmelden!");
-    
     const now = new Date();
     const entry = {
         personalNr: currentUser.nr,
@@ -111,70 +84,20 @@ function stamp(type) {
         time: now.toLocaleTimeString('de-DE')
     };
 
-    // 1. Lokales Backup im Browser speichern
-    let logs = JSON.parse(localStorage.getItem('timeLogs') || '[]');
-    logs.push(entry);
-    localStorage.setItem('timeLogs', JSON.stringify(logs));
+    document.getElementById('status-msg').innerText = `Gespeichert: ${type} um ${entry.time}`;
 
-    document.getElementById('status-msg').innerText = `Status: ${type} gespeichert um ${entry.time}`;
-
-    // 2. An Google Sheets senden
-    if (typeof GOOGLE_SCRIPT_URL !== 'undefined' && GOOGLE_SCRIPT_URL.startsWith("https://script.google.com")) {
-        fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify(entry)
-        })
-        .then(() => {
-            console.log('Erfolgreich an Google Sheets gesendet.');
-            alert(`Erfolgreich gestempelt: ${type}`);
-        })
-        .catch(err => {
-            console.error('Fehler beim Senden an Google Sheets:', err);
-            alert('Fehler beim Übertragen an Google Sheets!');
-        });
-    } else {
-        alert("Fehler: GOOGLE_SCRIPT_URL ist nicht definiert oder ungültig!");
-    }
-}
-
-    // 1. Lokales Backup im Browser speichern
-    let logs = JSON.parse(localStorage.getItem('timeLogs') || '[]');
-    logs.push(entry);
-    localStorage.setItem('timeLogs', JSON.stringify(logs));
-
-    document.getElementById('status-msg').innerText = `Status: ${type} gespeichert um ${entry.time}`;
-
-    // 2. An Google Sheets senden
-    if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== "https://script.google.com/macros/s/AKfycbyd4LzRP-xT_C-yKRSa5aA-DA29qDfGD-X4AwbSinEvaXDwf3RPEaUfiiKu-c7lLlEi/exec") {
-        fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(entry)
-        }).then(() => {
-            console.log('Erfolgreich an Google Sheets gesendet.');
-        }).catch(err => {
-            console.error('Fehler beim Senden an Google Sheets:', err);
-        });
-    }
-}
-
-function exportCSV() {
-    let logs = JSON.parse(localStorage.getItem('timeLogs') || '[]');
-    if (logs.length === 0) return alert('Keine Daten zum Exportieren vorhanden!');
-
-    let csvContent = "data:text/csv;charset=utf-8,Personalnummer;Name;Aktion;Datum;Uhrzeit\n";
-    logs.forEach(row => {
-        csvContent += `${row.personalNr};${row.name};${row.action};${row.date};${row.time}\n`;
+    // Senden an Google Apps Script
+    fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(entry)
+    })
+    .then(() => {
+        alert(`Erfolgreich gestempelt: ${type}`);
+    })
+    .catch(err => {
+        console.error('Fehler beim Senden:', err);
+        alert('Fehler beim Übertragen an Google Sheets!');
     });
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `Zeiterfassung_Export.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
 }
