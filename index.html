@@ -9,7 +9,7 @@
 <body>
     <div class="app-container">
 
-        <!-- EBENE 1: LOGIN (Nur Eingabefeld und Button) -->
+        <!-- EBENE 1: LOGIN (Für alle) -->
         <div id="login-view" class="card">
             <h2>Zeiterfassung Login</h2>
             <input type="text" id="personal-nr-input" placeholder="Personalnummer eingeben" autofocus>
@@ -17,7 +17,7 @@
             <p id="login-error-msg" style="color: red; margin-top: 10px;"></p>
         </div>
 
-        <!-- EBENE 2A: MITARBEITER-OBERFLÄCHE -->
+        <!-- EBENE 2A: MITARBEITER-ZEITERFASSUNG -->
         <div id="time-view" class="card hidden">
             <h2 id="welcome-msg">Willkommen!</h2>
             <p id="status-msg">Status: Bereit</p>
@@ -32,7 +32,7 @@
             <button onclick="logout()" class="btn btn-outline">Abmelden</button>
         </div>
 
-        <!-- EBENE 2B: ADMIN-OBERFLÄCHE (Nur mit Nr. 99) -->
+        <!-- EBENE 2B: ADMIN-BEREICH (Nur mit Nr. 99) -->
         <div id="admin-view" class="card hidden">
             <h2>Admin-Bereich</h2>
             <p id="admin-welcome-msg">Angemeldet als Administrator (99)</p>
@@ -45,7 +45,7 @@
 
             <hr>
             <h3>Mitarbeiterliste</h3>
-            <ul id="user-list-container"></ul>
+            <ul id="user-list-container" style="list-style: none; padding: 0;"></ul>
 
             <hr>
             <button onclick="exportCSV()" class="btn btn-info">CSV Daten Exportieren</button>
