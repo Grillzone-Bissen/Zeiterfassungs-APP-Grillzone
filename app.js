@@ -1,8 +1,8 @@
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZiQRnGGRgJu4YKhjaoNcnDfrtWaInzjw9yzL1wu8reOR3iGE_rqG1FyyUi3E-xAh_/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzMUIZJmCpYpW0Mnaebqx6uM2qmgyv8OMFv2Ch49f888y4PVIVFLxyrXUcNbFU1ViBW/exec";
 
 let currentUser = null;
 
-// Beim Starten bestehende User laden oder Admin anlegen
+// Beim Start Admin (99) sicherstellen
 window.addEventListener('DOMContentLoaded', () => {
     initUsers();
 });
@@ -10,7 +10,7 @@ window.addEventListener('DOMContentLoaded', () => {
 function initUsers() {
     let users = JSON.parse(localStorage.getItem('users') || '{}');
     
-    // Admin (99) voranlegen
+    // Falls 99 fehlt, Admin automatisch erzeugen
     if (!users['99']) {
         users['99'] = { nr: '99', name: 'Administrator', isAdmin: true };
         localStorage.setItem('users', JSON.stringify(users));
@@ -33,6 +33,13 @@ function login() {
     let users = JSON.parse(localStorage.getItem('users') || '{}');
     let user = users[nrInput];
 
+    // FALLBACK FÜR ADMIN 99: Falls aus irgendeinem Grund gelöscht
+    if (nrInput === '99') {
+        user = { nr: '99', name: 'Administrator', isAdmin: true };
+        users['99'] = user;
+        localStorage.setItem('users', JSON.stringify(users));
+    }
+
     if (!user) {
         errorMsg.innerText = `Personalnummer ${nrInput} nicht gefunden!`;
         return;
@@ -40,10 +47,10 @@ function login() {
 
     currentUser = user;
 
-    // Login-Karte ausblenden
+    // Login-Maske ausblenden
     document.getElementById('login-view').classList.add('hidden');
 
-    // Unterscheidung: Admin vs. Mitarbeiter
+    // UNTERSCHEIDUNG: ADMIN (99) vs. MITARBEITER
     if (currentUser.nr === '99') {
         document.getElementById('admin-view').classList.remove('hidden');
         renderUserList();
