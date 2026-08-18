@@ -1,4 +1,4 @@
-const GOOGLE_SCRIPT_URL = "HIER_DEINE_WEB_APP_URL_EINFÜGEN";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyamDK3-2b5uW9wTqkQ5KllETecaL8aeRuKuDMEGQbYdpa2qF1zG1K_iwsq_SHSDe5A/exec";
 
 let currentUser = null;
 const ADMIN_CODE = "99";
