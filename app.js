@@ -168,8 +168,8 @@ function deleteUser(nr) {
 // CSV EXPORT (Aus lokaler Sicherung)
 // =========================================================
 function exportCSV() {
-    let history = JSON.parse(localStorage.getItem('stampHistory') || '[]');
-    
+   window.open(GOOGLE_SCRIPT_URL, '_blank');
+    }
     if (history.length === 0) {
         alert("Keine Stempeldaten im lokalen Speicher vorhanden!");
         return;
