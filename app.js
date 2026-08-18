@@ -2,30 +2,58 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzMUIZJmCpYpW
 
 let currentUser = null;
 
-// Beim Laden der Seite prüfen, ob bereits Benutzer angelegt wurden
+// Beim Starten bestehende User laden oder Admin anlegen
 window.addEventListener('DOMContentLoaded', () => {
     initUsers();
 });
 
 function initUsers() {
     let users = JSON.parse(localStorage.getItem('users') || '{}');
-    // Standard-Admin anlegen, falls noch keine User existieren
+    
+    // Falls noch gar kein User existiert, Admin (99) voranlegen
     if (!users['99']) {
-        users['99'] = { nr: '99', name: 'Administrator', pin: '1234', isAdmin: true };
+        users['99'] = { nr: '99', name: 'Administrator' };
         localStorage.setItem('users', JSON.stringify(users));
     }
 }
 
 // =========================================================
-// LOGIN / LOGOUT LOGIK
+// USER ANLEGEN (Button: "User Speichern")
+// =========================================================
+function createUser() {
+    const nameInput = document.getElementById('new-name').value.trim();
+    const nrInput = document.getElementById('new-nr').value.trim();
+
+    if (!nameInput || !nrInput) {
+        alert("Bitte sowohl Name als auch Personalnummer eingeben!");
+        return;
+    }
+
+    let users = JSON.parse(localStorage.getItem('users') || '{}');
+
+    // Im LocalStorage speichern
+    users[nrInput] = {
+        nr: nrInput,
+        name: nameInput
+    };
+
+    localStorage.setItem('users', JSON.stringify(users));
+
+    alert(`User "${nameInput}" mit Personalnummer ${nrInput} erfolgreich gespeichert!`);
+
+    // Feldeingaben zurücksetzen
+    document.getElementById('new-name').value = '';
+    document.getElementById('new-nr').value = '';
+}
+
+// =========================================================
+// LOGIN / LOGOUT (Button: "Einloggen" & "Abmelden")
 // =========================================================
 function login() {
-    const nrInput = document.getElementById('login-nr').value.trim();
-    const pinInput = document.getElementById('login-pin').value.trim();
-    const msgEl = document.getElementById('login-msg');
+    const nrInput = document.getElementById('personal-nr-input').value.trim();
 
     if (!nrInput) {
-        msgEl.innerText = "Bitte Personalnummer eingeben!";
+        alert("Bitte Personalnummer eingeben!");
         return;
     }
 
@@ -33,37 +61,27 @@ function login() {
     let user = users[nrInput];
 
     if (!user) {
-        // Falls Nummer 99 eingegeben wird, aber aus irgendeinem Grund gelöscht war
-        if (nrInput === '99') {
-            user = { nr: '99', name: 'Administrator', pin: pinInput || '1234', isAdmin: true };
-            users['99'] = user;
-            localStorage.setItem('users', JSON.stringify(users));
-        } else {
-            msgEl.innerText = "Personalnummer nicht gefunden!";
-            return;
-        }
-    }
-
-    // PIN-Prüfung (falls PIN gesetzt ist)
-    if (user.pin && user.pin !== pinInput) {
-        msgEl.innerText = "Falsche PIN!";
+        alert(`Personalnummer ${nrInput} wurde nicht gefunden! Bitte zuerst unten anlegen.`);
         return;
     }
 
-    // Erfolgreicher Login
     currentUser = user;
-    document.getElementById('login-container').style.display = 'none';
-    document.getElementById('app-container').style.display = 'block';
-    document.getElementById('welcome-user').innerText = `Willkommen, ${currentUser.name} (${currentUser.nr})`;
-    msgEl.innerText = "";
+
+    // UI umschalten: Login-Karte ausblenden, Stempel-Karte anzeigen
+    document.getElementById('login-view').classList.add('hidden');
+    document.getElementById('time-view').classList.remove('hidden');
+
+    document.getElementById('welcome-msg').innerText = `Willkommen, ${currentUser.name}!`;
+    document.getElementById('status-msg').innerText = "Status: Bereit";
 }
 
 function logout() {
     currentUser = null;
-    document.getElementById('login-nr').value = "";
-    document.getElementById('login-pin').value = "";
-    document.getElementById('app-container').style.display = 'none';
-    document.getElementById('login-container').style.display = 'block';
+    document.getElementById('personal-nr-input').value = '';
+    
+    // UI umschalten: Stempel-Karte ausblenden, Login-Karte anzeigen
+    document.getElementById('time-view').classList.add('hidden');
+    document.getElementById('login-view').classList.remove('hidden');
 }
 
 // =========================================================
@@ -84,9 +102,9 @@ function stamp(type) {
         time: now.toLocaleTimeString('de-DE')
     };
 
-    document.getElementById('status-msg').innerText = `Gespeichert: ${type} um ${entry.time}`;
+    document.getElementById('status-msg').innerText = `Status: ${type} um ${entry.time} Uhr`;
 
-    // Senden an Google Apps Script
+    // Per Fetch an Google Apps Script übertragen
     fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
         mode: 'no-cors',
@@ -100,4 +118,11 @@ function stamp(type) {
         console.error('Fehler beim Senden:', err);
         alert('Fehler beim Übertragen an Google Sheets!');
     });
+}
+
+// =========================================================
+// CSV EXPORT
+// =========================================================
+function exportCSV() {
+    alert("CSV-Export-Funktion wird geladen.");
 }
