@@ -16,6 +16,16 @@
                 <input type="text" id="personal-nr-input" placeholder="Personalnummer eingeben" autofocus autocomplete="off">
                 <button type="submit" class="btn btn-primary">Einloggen</button>
             </form>
+
+            <!-- PIN-Abfrage (Nur für Admin 99) -->
+            <div id="admin-pin-container" class="hidden" style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
+                <label style="font-weight: bold; font-size: 14px; display: block; margin-bottom: 5px;">Admin PIN erforderlich:</label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="password" id="admin-pin-input" placeholder="PIN (Standard: 1234)" style="margin: 0;" autocomplete="off">
+                    <button type="button" onclick="verifyAdminPin()" class="btn btn-success" style="width: auto; margin: 0; white-space: nowrap;">Bestätigen</button>
+                </div>
+            </div>
+
             <p id="login-error-msg" style="color: red; margin-top: 10px;"></p>
         </div>
 
@@ -34,7 +44,7 @@
             <button type="button" onclick="logout()" class="btn btn-outline">Abmelden</button>
         </div>
 
-        <!-- EBENE 2B: ADMIN-BEREICH (Nur mit Nr. 99) -->
+        <!-- EBENE 2B: ADMIN-BEREICH (Nur mit Nr. 99 & PIN) -->
         <div id="admin-view" class="card hidden">
             <h2>Admin-Bereich</h2>
             <p id="admin-welcome-msg">Angemeldet als Administrator (99)</p>
@@ -52,21 +62,26 @@
                 <button type="button" onclick="openManualTimeForm()" class="btn btn-primary" style="width: auto; margin: 0; white-space: nowrap;">Mitarbeiter wählen</button>
             </div>
 
-            <!-- Formular klappt nach Auswahl des Users auf -->
-           <div id="manual-time-form" class="hidden" style="display: none; background: #f9f9f9; padding: 12px; border-radius: 6px; border: 1px solid #ddd; margin-top: 10px;">
-            <h4 id="manual-selected-user-header" style="margin-top: 0; margin-bottom: 10px;"></h4>
-    
-            <label style="font-size: 12px; font-weight: bold; display: block; margin-top: 5px;">Datum:</label>
-            <input type="date" id="manual-date" style="margin-bottom: 8px; width: 100%;">
+            <div id="manual-time-form" class="hidden" style="display: none; background: #f9f9f9; padding: 12px; border-radius: 6px; border: 1px solid #ddd; margin-top: 10px;">
+                <h4 id="manual-selected-user-header" style="margin-top: 0; margin-bottom: 10px;"></h4>
+                
+                <label style="font-size: 12px; font-weight: bold; display: block; margin-top: 5px;">Datum:</label>
+                <input type="date" id="manual-date" style="margin-bottom: 8px; width: 100%;">
 
-            <label style="font-size: 12px; font-weight: bold; display: block; margin-top: 5px;">Arbeitsbeginn (HH:MM):</label>
-            <input type="time" id="manual-start-time" style="margin-bottom: 8px; width: 100%;">
+                <label style="font-size: 12px; font-weight: bold; display: block; margin-top: 5px;">Arbeitsbeginn (HH:MM):</label>
+                <input type="time" id="manual-start-time" style="margin-bottom: 8px; width: 100%;">
 
-            <label style="font-size: 12px; font-weight: bold; display: block; margin-top: 5px;">Arbeitsende (HH:MM):</label>
-            <input type="time" id="manual-end-time" style="margin-bottom: 12px; width: 100%;">
+                <label style="font-size: 12px; font-weight: bold; display: block; margin-top: 5px;">Arbeitsende (HH:MM):</label>
+                <input type="time" id="manual-end-time" style="margin-bottom: 12px; width: 100%;">
 
-            <button type="button" onclick="submitManualTime()" class="btn btn-success">Zeiten Speichern</button>
+                <button type="button" onclick="submitManualTime()" class="btn btn-success">Zeiten Speichern</button>
             </div>
+
+            <hr>
+            <h3>Admin PIN ändern</h3>
+            <input type="password" id="current-pin-input" placeholder="Aktueller PIN">
+            <input type="password" id="new-pin-input" placeholder="Neuer PIN">
+            <button type="button" onclick="changeAdminPin()" class="btn btn-warning">PIN Aktualisieren</button>
 
             <hr>
             <h3>Mitarbeiterliste</h3>
@@ -78,6 +93,6 @@
         </div>
 
     </div>
-    <script src="app.js?v=4"></script>
+    <script src="app.js?v=7"></script>
 </body>
 </html>
