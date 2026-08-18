@@ -100,7 +100,8 @@ function deleteUser(nr) {
 
 // ZEIT STEMPELN UND AN GOOGLE SHEETS SENDEN
 function stamp(type) {
-    if (!currentUser) return;
+    if (!currentUser) return alert("Bitte zuerst anmelden!");
+    
     const now = new Date();
     const entry = {
         personalNr: currentUser.nr,
@@ -109,6 +110,34 @@ function stamp(type) {
         date: now.toLocaleDateString('de-DE'),
         time: now.toLocaleTimeString('de-DE')
     };
+
+    // 1. Lokales Backup im Browser speichern
+    let logs = JSON.parse(localStorage.getItem('timeLogs') || '[]');
+    logs.push(entry);
+    localStorage.setItem('timeLogs', JSON.stringify(logs));
+
+    document.getElementById('status-msg').innerText = `Status: ${type} gespeichert um ${entry.time}`;
+
+    // 2. An Google Sheets senden
+    if (typeof GOOGLE_SCRIPT_URL !== 'undefined' && GOOGLE_SCRIPT_URL.startsWith("https://script.google.com")) {
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify(entry)
+        })
+        .then(() => {
+            console.log('Erfolgreich an Google Sheets gesendet.');
+            alert(`Erfolgreich gestempelt: ${type}`);
+        })
+        .catch(err => {
+            console.error('Fehler beim Senden an Google Sheets:', err);
+            alert('Fehler beim Übertragen an Google Sheets!');
+        });
+    } else {
+        alert("Fehler: GOOGLE_SCRIPT_URL ist nicht definiert oder ungültig!");
+    }
+}
 
     // 1. Lokales Backup im Browser speichern
     let logs = JSON.parse(localStorage.getItem('timeLogs') || '[]');
