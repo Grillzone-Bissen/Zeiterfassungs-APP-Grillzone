@@ -144,7 +144,7 @@ function renderUserList() {
     listEl.innerHTML = '';
 
     let users = JSON.parse(localStorage.getItem('users') || '{}');
-    
+
     Object.keys(users).forEach(nr => {
         if (nr !== '99') {
             const li = document.createElement('li');
@@ -175,7 +175,7 @@ function deleteUser(nr) {
 }
 
 // =========================================================
-// CSV EXPORT (Aus lokaler Sicherung)
+// CSV EXPORT (Direkt aus Google Sheets)
 // =========================================================
 function exportCSV() {
     fetch(GOOGLE_SCRIPT_URL)
@@ -188,14 +188,14 @@ function exportCSV() {
 
             const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
-            
+
             const link = document.createElement("a");
             link.setAttribute("href", url);
             link.setAttribute("download", `Stempeldaten_Export_${new Date().toISOString().slice(0,10)}.csv`);
             document.body.appendChild(link);
-            
+
             link.click();
-            
+
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
         })
