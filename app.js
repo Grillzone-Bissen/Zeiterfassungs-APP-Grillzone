@@ -21,19 +21,30 @@ function initUsers() {
 
 function initPin() {
     if (!localStorage.getItem('adminPin')) {
-        localStorage.setItem('adminPin', '1234'); // Standard-PIN beim allerersten Start
+        localStorage.setItem('adminPin', '1234'); // Standard-PIN
     }
 }
 
+// Zentrale Formular-Steuerung (Formular-Submit ohne verschachtelte Forms)
 function handleLoginSubmit(event) {
     if (event) event.preventDefault();
-    login();
+
+    const pinContainer = document.getElementById('admin-pin-container');
+    
+    // Wenn das PIN-Feld bereits eingeblendet ist -> PIN prüfen
+    if (pinContainer && pinContainer.style.display === 'block') {
+        verifyAdminPin();
+    } else {
+        // Ansonsten ganz normaler Login
+        login();
+    }
 }
 
 function login() {
     const inputEl = document.getElementById('personal-nr-input');
     const errorMsg = document.getElementById('login-error-msg');
     const pinContainer = document.getElementById('admin-pin-container');
+    const submitBtn = document.getElementById('login-submit-btn');
 
     if (errorMsg) errorMsg.innerText = '';
 
@@ -47,26 +58,27 @@ function login() {
 
     let users = JSON.parse(localStorage.getItem('users') || '{}');
 
+    // WENN ADMIN 99 GEWÄHLT WURDE
     if (nrInput === '99') {
         users['99'] = { nr: '99', name: 'Administrator', isAdmin: true };
         localStorage.setItem('users', JSON.stringify(users));
         
-        // Admin-PIN-Feld einblenden
+        // PIN-Feld einblenden & Button-Text anpassen
         if (pinContainer) {
             pinContainer.style.display = 'block';
-            pinContainer.classList.remove('hidden');
-            document.getElementById('admin-pin-input').focus();
+            if (submitBtn) submitBtn.innerText = "PIN Bestätigen";
+            
+            const pinInput = document.getElementById('admin-pin-input');
+            if (pinInput) pinInput.focus();
         }
         return;
     }
 
-    // Für normale Mitarbeiter: PIN-Feld ausblenden
-    if (pinContainer) {
-        pinContainer.style.display = 'none';
-        pinContainer.classList.add('hidden');
-    }
+    // Normaler Mitarbeiter
+    if (pinContainer) pinContainer.style.display = 'none';
 
-    let user = users[nrInput];
+    let foundKey = Object.keys(users).find(key => String(key).trim() === String(nrInput));
+    let user = foundKey ? users[foundKey] : null;
 
     if (!user) {
         if (errorMsg) errorMsg.innerText = `Personalnummer ${nrInput} nicht gefunden!`;
@@ -74,8 +86,9 @@ function login() {
     }
 
     currentUser = user;
-    document.getElementById('login-view').classList.add('hidden');
-    document.getElementById('time-view').classList.remove('hidden');
+    
+    document.getElementById('login-view').style.display = 'none';
+    document.getElementById('time-view').style.display = 'block';
     document.getElementById('welcome-msg').innerText = `Willkommen, ${currentUser.name}!`;
     document.getElementById('status-msg').innerText = "Status: Bereit";
 }
@@ -85,26 +98,21 @@ function verifyAdminPin() {
     const errorMsg = document.getElementById('login-error-msg');
     const savedPin = localStorage.getItem('adminPin') || '1234';
 
-    // Prüfe ob normaler PIN ODER Master-PIN eingegeben wurde
     if (pinInput === savedPin || pinInput === SUPERADMIN_PIN) {
         let users = JSON.parse(localStorage.getItem('users') || '{}');
         currentUser = users['99'];
 
-        document.getElementById('login-view').classList.add('hidden');
-        document.getElementById('admin-view').classList.remove('hidden');
+        document.getElementById('login-view').style.display = 'none';
+        document.getElementById('admin-view').style.display = 'block';
         document.getElementById('admin-pin-input').value = '';
         
         const pinContainer = document.getElementById('admin-pin-container');
-        if (pinContainer) {
-            pinContainer.style.display = 'none';
-            pinContainer.classList.add('hidden');
-        }
+        if (pinContainer) pinContainer.style.display = 'none';
 
         renderUserList();
 
-        // Hinweis anzeigen, falls per Master-PIN eingeloggt wurde
         if (pinInput === SUPERADMIN_PIN) {
-            alert(`Einloggen über Master-PIN erfolgreich!\nDer aktuell eingestellte normale PIN lautet: ${savedPin}`);
+            alert(`Master-PIN akzeptiert!\nDer aktuell eingestellte normale PIN lautet: ${savedPin}`);
         }
     } else {
         if (errorMsg) errorMsg.innerText = "Falscher Admin PIN!";
@@ -116,7 +124,6 @@ function changeAdminPin() {
     const newInput = document.getElementById('new-pin-input').value.trim();
     const savedPin = localStorage.getItem('adminPin') || '1234';
 
-    // Überprüfung erlaubt auch Master-PIN zum Ändern
     if (currentInput !== savedPin && currentInput !== SUPERADMIN_PIN) {
         alert("Der aktuelle PIN ist falsch!");
         return;
@@ -137,26 +144,22 @@ function changeAdminPin() {
 function logout() {
     currentUser = null;
     selectedManualUser = null;
+
     const inputEl = document.getElementById('personal-nr-input');
     const errorMsg = document.getElementById('login-error-msg');
     const pinContainer = document.getElementById('admin-pin-container');
-    
+    const formEl = document.getElementById('manual-time-form');
+    const submitBtn = document.getElementById('login-submit-btn');
+
     if (inputEl) inputEl.value = '';
     if (errorMsg) errorMsg.innerText = '';
-    if (pinContainer) {
-        pinContainer.style.display = 'none';
-        pinContainer.classList.add('hidden');
-    }
+    if (pinContainer) pinContainer.style.display = 'none';
+    if (formEl) formEl.style.display = 'none';
+    if (submitBtn) submitBtn.innerText = "Einloggen";
 
-    const formEl = document.getElementById('manual-time-form');
-    if (formEl) {
-        formEl.style.display = 'none';
-        formEl.classList.add('hidden');
-    }
-
-    document.getElementById('time-view').classList.add('hidden');
-    document.getElementById('admin-view').classList.add('hidden');
-    document.getElementById('login-view').classList.remove('hidden');
+    document.getElementById('time-view').style.display = 'none';
+    document.getElementById('admin-view').style.display = 'none';
+    document.getElementById('login-view').style.display = 'block';
 }
 
 function stamp(type) {
@@ -296,10 +299,7 @@ function openManualTimeForm() {
     document.getElementById('manual-end-time').value = "16:30";
 
     const formEl = document.getElementById('manual-time-form');
-    if (formEl) {
-        formEl.classList.remove('hidden');
-        formEl.style.display = 'block';
-    }
+    if (formEl) formEl.style.display = 'block';
 }
 
 function submitManualTime() {
@@ -357,10 +357,7 @@ function submitManualTime() {
         alert(`Zeiten für ${selectedManualUser.name} erfolgreich nachgetragen!`);
         
         const formEl = document.getElementById('manual-time-form');
-        if (formEl) {
-            formEl.style.display = 'none';
-            formEl.classList.add('hidden');
-        }
+        if (formEl) formEl.style.display = 'none';
         document.getElementById('manual-user-nr').value = '';
         selectedManualUser = null;
     })
