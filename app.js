@@ -72,12 +72,22 @@ function stamp(type) {
     if (!currentUser) return;
 
     const now = new Date();
+
+    // Datum & Zeit explizit mit führenden Nullen formatieren (DD.MM.YYYY und HH:MM:SS)
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = now.getFullYear();
+
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+
     const entry = {
         personalNr: currentUser.nr,
         name: currentUser.name,
         action: type,
-        date: now.toLocaleDateString('de-DE'),
-        time: now.toLocaleTimeString('de-DE')
+        date: `${day}.${month}.${year}`,
+        time: `${hours}:${minutes}:${seconds}`
     };
 
     // Lokale Sicherung für den Fall der Fälle
