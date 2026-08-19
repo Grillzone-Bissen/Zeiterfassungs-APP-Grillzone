@@ -13,60 +13,19 @@ jobs:
     - name: 1. Code auschecken
       uses: actions/checkout@v4
 
-    - name: 2. Java 17 einrichten
-      uses: actions/setup-java@v5
+    - name: 2. Cache für Buildozer einrichten
+      uses: actions/cache@v4
       with:
-        distribution: 'temurin'
-        java-version: '17'
+        path: .buildozer
+        key: buildozer-${{ runner.os }}-${{ hashFiles('buildozer.spec') }}
 
-    - name: 3. Python 3.11 einrichten
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-
-    - name: 4. C/C++ & Python Build-Dependencies installieren
-      env:
-        DEBIAN_FRONTEND: noninteractive
+    - name: 3. APK mit offiziellem Buildozer-Docker bauen
       run: |
-        sudo apt-get update -o Acquire::ForceIPv4=true -o Acquire::http::Timeout="10" -o Acquire::Retries="3"
-        sudo apt-get install -y --no-install-recommends \
-          -o Acquire::ForceIPv4=true \
-          -o Acquire::http::Timeout="10" \
-          build-essential \
-          git \
-          ffmpeg \
-          libsdl2-dev \
-          libsdl2-image-dev \
-          libsdl2-mixer-dev \
-          libsdl2-ttf-dev \
-          libportmidi-dev \
-          libswscale-dev \
-          libavformat-dev \
-          libavcodec-dev \
-          autoconf \
-          automake \
-          libtool \
-          ccache \
-          libffi-dev \
-          libssl-dev \
-          zlib1g-dev \
-          libgdbm-dev \
-          libsqlite3-dev \
-          zip \
-          unzip
+        docker run --rm \
+          -v ${{ github.workspace }}:/home/user/hostpython \
+          kivy/buildozer android debug
 
-    - name: 5. Buildozer & Cython installieren
-      run: |
-        python -m pip install --upgrade pip setuptools
-        python -m pip install "cython<3.0.0" buildozer
-
-    - name: 6. APK bauen
-      env:
-        JAVA_HOME: ${{ env.JAVA_HOME }}
-      run: |
-        buildozer android debug
-
-    - name: 7. Fertige APK als Artefakt hochladen
+    - name: 4. Fertige APK als Artefakt hochladen
       uses: actions/upload-artifact@v4
       with:
         name: Zeiterfassung-Android-App
