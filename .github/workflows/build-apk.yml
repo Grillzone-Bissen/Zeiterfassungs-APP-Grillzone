@@ -28,8 +28,10 @@ jobs:
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
-        sudo apt-get update -qq
+        sudo apt-get update -o Acquire::ForceIPv4=true -o Acquire::http::Timeout="10" -o Acquire::Retries="3"
         sudo apt-get install -y --no-install-recommends \
+          -o Acquire::ForceIPv4=true \
+          -o Acquire::http::Timeout="10" \
           ffmpeg \
           libsdl2-dev \
           libsdl2-image-dev \
