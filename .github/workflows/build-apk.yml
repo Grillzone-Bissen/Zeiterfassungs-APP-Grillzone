@@ -24,11 +24,16 @@ jobs:
       with:
         python-version: '3.11'
 
-    - name: 4. Vollständige C/C++ & Autotools Build-Dependencies installieren
+   - name: 4. Vollständige C/C++ & Autotools Build-Dependencies installieren
       run: |
-        sudo sed -i 's/azure.archive.ubuntu.com/archive.ubuntu.com/g' /etc/apt/sources.list
-        sudo apt-get update
-        sudo apt-get install -y \
+        # Alle Ubuntu-Mirror auf den schnellen Hauptserver umstellen
+        sudo sed -i -e 's/azure.archive.ubuntu.com/archive.ubuntu.com/g' -e 's/security.ubuntu.com/archive.ubuntu.com/g' /etc/apt/sources.list
+        
+        # Strikte Timeouts setzen (max. 10s pro Paket)
+        sudo apt-get -o Acquire::http::Timeout="10" -o Acquire::Retries="3" update -q
+        
+        # Nur zwingend benötigte Pakete ohne Ballast installieren
+        sudo apt-get -o Acquire::http::Timeout="10" -o Acquire::Retries="3" install -y --no-install-recommends --fix-missing \
           build-essential \
           git \
           ffmpeg \
