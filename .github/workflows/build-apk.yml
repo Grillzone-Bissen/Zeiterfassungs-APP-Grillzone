@@ -24,18 +24,12 @@ jobs:
       with:
         python-version: '3.11'
 
-    - name: 4. Vollständige C/C++ & Autotools Build-Dependencies installieren
+    - name: 4. C/C++ Build-Dependencies für Kivy/p4a installieren
+      env:
+        DEBIAN_FRONTEND: noninteractive
       run: |
-        # Alle Ubuntu-Mirror auf den schnellen Hauptserver umstellen
-        sudo sed -i -e 's/azure.archive.ubuntu.com/archive.ubuntu.com/g' -e 's/security.ubuntu.com/archive.ubuntu.com/g' /etc/apt/sources.list
-        
-        # Strikte Timeouts setzen (max. 10s pro Paket)
-        sudo apt-get -o Acquire::http::Timeout="10" -o Acquire::Retries="3" update -q
-        
-        # Nur zwingend benötigte Pakete ohne Ballast installieren
-        sudo apt-get -o Acquire::http::Timeout="10" -o Acquire::Retries="3" install -y --no-install-recommends --fix-missing \
-          build-essential \
-          git \
+        sudo apt-get update -qq
+        sudo apt-get install -y --no-install-recommends \
           ffmpeg \
           libsdl2-dev \
           libsdl2-image-dev \
@@ -45,17 +39,12 @@ jobs:
           libswscale-dev \
           libavformat-dev \
           libavcodec-dev \
-          zlib1g-dev \
           autoconf \
           automake \
           libtool \
-          pkg-config \
-          cmake \
           ccache \
           libffi-dev \
-          libssl-dev \
-          zip \
-          unzip
+          libssl-dev
 
     - name: 5. Buildozer & gepinnte Cython-Version installieren
       run: |
