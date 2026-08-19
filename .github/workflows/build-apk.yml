@@ -26,6 +26,7 @@ jobs:
 
     - name: 4. Vollständige C/C++ & Autotools Build-Dependencies installieren
       run: |
+        sudo sed -i 's/azure.archive.ubuntu.com/archive.ubuntu.com/g' /etc/apt/sources.list
         sudo apt-get update
         sudo apt-get install -y \
           build-essential \
