@@ -24,7 +24,7 @@ jobs:
       with:
         python-version: '3.11'
 
-    - name: 4. C/C++ Build-Dependencies installieren
+    - name: 4. C/C++ & Python Build-Dependencies installieren
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
@@ -32,6 +32,9 @@ jobs:
         sudo apt-get install -y --no-install-recommends \
           -o Acquire::ForceIPv4=true \
           -o Acquire::http::Timeout="10" \
+          build-essential \
+          git \
+          ffmpeg \
           libsdl2-dev \
           libsdl2-image-dev \
           libsdl2-mixer-dev \
@@ -45,7 +48,12 @@ jobs:
           libtool \
           ccache \
           libffi-dev \
-          libssl-dev
+          libssl-dev \
+          zlib1g-dev \
+          libgdbm-dev \
+          libsqlite3-dev \
+          zip \
+          unzip
 
     - name: 5. Buildozer & Cython installieren
       run: |
