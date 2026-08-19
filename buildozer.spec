@@ -7,7 +7,7 @@ source.dir = .
 source.include_exts = py,png,jpg,kv,atlas,html,css,js
 
 version = 1.0.0
-requirements = python3,kivy==2.3.0,kivymd,urllib3,requests
+requirements = python3,kivy==2.3.0,https://github.com/kivymd/KivyMD/archive/master.zip,urllib3,requests
 
 orientation = portrait
 
