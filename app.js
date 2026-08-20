@@ -1,4 +1,4 @@
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby-L4xRm2o4P0Ok4tOUGdzIJThQmewtFcQILeIQcOWSu_bktxgj-l0cSOweauxUCl0O/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzz7cs-yDZgbnulq7GNRVYoOdAFGSgqYqgIyLPLCmQMopa4zl6wgWeNJWkJCShGuAVM/exec";
 
 // Notfall-Master-PIN (Superadmin Fallback)
 const SUPERADMIN_PIN = "10041976";
