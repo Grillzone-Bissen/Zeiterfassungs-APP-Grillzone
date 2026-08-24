@@ -281,72 +281,101 @@ function openManualTimeForm() {
         return;
     }
 
-    selectedManualUser = targetUser;
-
+    // Header aktualisieren
     const headerEl = document.getElementById('manual-selected-user-header');
     if (headerEl) {
-        headerEl.innerText = `Manuelle Erfassung für: ${targetUser.name} (Nr. ${targetUser.nr})`;
+        headerEl.innerText = `Manuelle Erfassung für: ${targetUser.name || targetUser} (Nr. ${nrInput})`;
     }
 
+    // Datum auf heute setzen
     const now = new Date();
     const day = String(now.getDate()).padStart(2, '0');
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const year = now.getFullYear();
     const todayStr = `${year}-${month}-${day}`;
 
-    document.getElementById('manual-date').value = todayStr;
-    document.getElementById('manual-start-time').value = "";
-    document.getElementById('manual-end-time').value = "";
+    const dateEl = document.getElementById('manual-date');
+    if (dateEl) dateEl.value = todayStr;
+
+    // UHRZEIT-FELDER EXPLIZIT LEEREN (Keine Standardwerte 08:00 / 16:30!)
+    const startEl = document.getElementById('manual-start-time');
+    const endEl = document.getElementById('manual-end-time');
+    if (startEl) startEl.value = "";
+    if (endEl) endEl.value = "";
 
     const formEl = document.getElementById('manual-time-form');
     if (formEl) formEl.style.display = 'block';
 }
 
 function submitManualTime() {
-    const userNr = document.getElementById('manual-user-nr').value.trim();
-    const dateVal = document.getElementById('manual-date').value;
-    const startTime = document.getElementById('manual-start-time').value.trim();
-    const endTime = document.getElementById('manual-end-time').value.trim();
+    const userNrInput = document.getElementById('manual-user-nr');
+    const dateInput = document.getElementById('manual-date');
+    const startInput = document.getElementById('manual-start-time');
+    const endInput = document.getElementById('manual-end-time');
 
-    if (!startTime && !endTime) {
-        alert("Bitte gib mindestens Arbeitsbeginn oder Arbeitsende ein!");
+    if (!userNrInput || !dateInput || !startInput || !endInput) {
+        alert("Fehler: Formular-Elemente nicht gefunden.");
         return;
     }
 
-    // Datum umformatieren (YYYY-MM-DD -> DD.MM.YYYY)
+    const userNr = userNrInput.value.trim();
+    const dateVal = dateInput.value;
+    const startTime = startInput.value.trim();
+    const endTime = endInput.value.trim();
+
+    // 1. Mindestens ein Feld muss ausgefüllt sein
+    if (!startTime && !endTime) {
+        alert("Bitte gib mindestens den Arbeitsbeginn ODER das Arbeitsende ein!");
+        return;
+    }
+
+    // 2. Namen aus localStorage laden
+    let empName = "Unbekannt";
+    try {
+        let users = JSON.parse(localStorage.getItem('users') || '{}');
+        let foundKey = Object.keys(users).find(key => String(key).trim() === String(userNr));
+        if (foundKey && users[foundKey]) {
+            empName = typeof users[foundKey] === 'object' ? users[foundKey].name : users[foundKey];
+        }
+    } catch (e) {
+        console.error("Fehler beim Abrufen des Namens:", e);
+    }
+
+    // 3. Datum umformatieren (YYYY-MM-DD -> DD.MM.YYYY)
     let formattedDate = dateVal;
-    if (dateVal.includes("-")) {
+    if (dateVal && dateVal.includes("-")) {
         const parts = dateVal.split("-");
         formattedDate = `${parts[2]}.${parts[1]}.${parts[0]}`;
     }
 
-    // 1. Nur senden, wenn Arbeitsbeginn bewusst ausgefüllt wurde
+    // 4. Nur senden, was tatsächlich ausgefüllt wurde
     if (startTime !== "") {
         sendToGoogleScript({
             date: formattedDate,
             time: startTime,
             personalNr: userNr,
-            name: targetUser.name, // bzw. deine Variable für den Namen
+            name: empName,
             action: "Arbeitsbeginn"
         });
     }
 
-    // 2. Nur senden, wenn Arbeitsende bewusst ausgefüllt wurde
     if (endTime !== "") {
         sendToGoogleScript({
             date: formattedDate,
             time: endTime,
             personalNr: userNr,
-            name: targetUser.name,
+            name: empName,
             action: "Arbeitsende"
         });
     }
 
-    // Felder wieder leeren & Formular ausblenden
-    document.getElementById('manual-start-time').value = "";
-    document.getElementById('manual-end-time').value = "";
-    document.getElementById('manual-time-form').style.display = 'none';
-    alert("Zeiten erfolgreich gespeichert!");
+    // Felder wieder leeren & Formular schließen
+    startInput.value = "";
+    endInput.value = "";
+    const formEl = document.getElementById('manual-time-form');
+    if (formEl) formEl.style.display = 'none';
+
+    alert("Zeiten erfolgreich an Google Sheets übertragen!");
 }
 
 function exportCSV() {
