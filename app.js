@@ -295,76 +295,58 @@ function openManualTimeForm() {
     const todayStr = `${year}-${month}-${day}`;
 
     document.getElementById('manual-date').value = todayStr;
-    document.getElementById('manual-start-time').value = "08:00";
-    document.getElementById('manual-end-time').value = "16:30";
+    document.getElementById('manual-start-time').value = "";
+    document.getElementById('manual-end-time').value = "";
 
     const formEl = document.getElementById('manual-time-form');
     if (formEl) formEl.style.display = 'block';
 }
 
 function submitManualTime() {
-    if (!selectedManualUser) {
-        alert("Kein Mitarbeiter ausgewählt!");
+    const userNr = document.getElementById('manual-user-nr').value.trim();
+    const dateVal = document.getElementById('manual-date').value;
+    const startTime = document.getElementById('manual-start-time').value.trim();
+    const endTime = document.getElementById('manual-end-time').value.trim();
+
+    if (!startTime && !endTime) {
+        alert("Bitte gib mindestens Arbeitsbeginn oder Arbeitsende ein!");
         return;
     }
 
-    const rawDate = document.getElementById('manual-date').value;
-    const startTime = document.getElementById('manual-start-time').value;
-    const endTime = document.getElementById('manual-end-time').value;
-
-    if (!rawDate || !startTime || !endTime) {
-        alert("Bitte Datum, Arbeitsbeginn und Arbeitsende vollständig ausfüllen!");
-        return;
+    // Datum umformatieren (YYYY-MM-DD -> DD.MM.YYYY)
+    let formattedDate = dateVal;
+    if (dateVal.includes("-")) {
+        const parts = dateVal.split("-");
+        formattedDate = `${parts[2]}.${parts[1]}.${parts[0]}`;
     }
 
-    const dateParts = rawDate.split('-');
-    const formattedDate = `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`;
-
-    const formattedStart = startTime.length === 5 ? `${startTime}:00` : startTime;
-    const formattedEnd = endTime.length === 5 ? `${endTime}:00` : endTime;
-
-    const startEntry = {
-        personalNr: String(selectedManualUser.nr),
-        name: selectedManualUser.name,
-        action: "Arbeitsbeginn",
-        date: formattedDate,
-        time: formattedStart
-    };
-
-    const endEntry = {
-        personalNr: String(selectedManualUser.nr),
-        name: selectedManualUser.name,
-        action: "Arbeitsende",
-        date: formattedDate,
-        time: formattedEnd
-    };
-
-    fetch(GOOGLE_SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify(startEntry)
-    })
-    .then(() => {
-        return fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify(endEntry)
+    // 1. Nur senden, wenn Arbeitsbeginn bewusst ausgefüllt wurde
+    if (startTime !== "") {
+        sendToGoogleScript({
+            date: formattedDate,
+            time: startTime,
+            personalNr: userNr,
+            name: targetUser.name, // bzw. deine Variable für den Namen
+            action: "Arbeitsbeginn"
         });
-    })
-    .then(() => {
-        alert(`Zeiten für ${selectedManualUser.name} erfolgreich nachgetragen!`);
-        
-        const formEl = document.getElementById('manual-time-form');
-        if (formEl) formEl.style.display = 'none';
-        document.getElementById('manual-user-nr').value = '';
-        selectedManualUser = null;
-    })
-    .catch(err => {
-        console.error("Fehler beim Nachtragen:", err);
-        alert("Fehler beim Übertragen an Google Sheets!");
-    });
+    }
+
+    // 2. Nur senden, wenn Arbeitsende bewusst ausgefüllt wurde
+    if (endTime !== "") {
+        sendToGoogleScript({
+            date: formattedDate,
+            time: endTime,
+            personalNr: userNr,
+            name: targetUser.name,
+            action: "Arbeitsende"
+        });
+    }
+
+    // Felder wieder leeren & Formular ausblenden
+    document.getElementById('manual-start-time').value = "";
+    document.getElementById('manual-end-time').value = "";
+    document.getElementById('manual-time-form').style.display = 'none';
+    alert("Zeiten erfolgreich gespeichert!");
 }
 
 function exportCSV() {
