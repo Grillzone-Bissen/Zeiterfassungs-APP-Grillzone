@@ -398,3 +398,20 @@ function submitManualTime() {
 function exportCSV() {
     window.location.href = GOOGLE_SCRIPT_URL;
 }
+function sendToGoogleScript(data) {
+    fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+    })
+    .then(() => {
+        console.log("Erfolgreich an Google gesendet:", data);
+    })
+    .catch(error => {
+        console.error("Fehler beim Senden:", error);
+        alert("Fehler beim Übertragen der Daten an Google Sheets!");
+    });
+}
