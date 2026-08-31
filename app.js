@@ -90,7 +90,7 @@ function login() {
     document.getElementById('login-view').style.display = 'none';
     document.getElementById('time-view').style.display = 'block';
     document.getElementById('welcome-msg').innerText = `Willkommen, ${currentUser.name}!`;
-    document.getElementById('status-msg').innerText = "Status: Bereit";
+    document.getElementById('status-msg').innerHTML = "Status: Bereit";
 }
 
 function verifyAdminPin() {
@@ -162,6 +162,24 @@ function logout() {
     document.getElementById('login-view').style.display = 'block';
 }
 
+// Hilfsfunktion zur Berechnung der Arbeitszeit-Differenz
+function calculateDuration(startTimeStr, endTimeStr) {
+    const parseTime = (str) => {
+        const p = str.split(':').map(Number);
+        return p[0] * 3600 + p[1] * 60 + (p[2] || 0);
+    };
+
+    const diffSecs = parseTime(endTimeStr) - parseTime(startTimeStr);
+    if (diffSecs <= 0) return "";
+
+    const hrs = String(Math.floor(diffSecs / 3600)).padStart(2, '0');
+    const mins = String(Math.floor((diffSecs % 3600) / 60)).padStart(2, '0');
+    const secs = String(diffSecs % 60).padStart(2, '0');
+
+    return `${hrs}:${mins}:${secs} Std.`;
+}
+
+// Angepasste Stempel-Funktion mit zweizeiliger Anzeige bei Arbeitsende
 function stamp(type) {
     if (!currentUser) return;
 
@@ -175,19 +193,42 @@ function stamp(type) {
     const minutes = String(now.getMinutes()).padStart(2, '0');
     const seconds = String(now.getSeconds()).padStart(2, '0');
 
+    const timeStr = `${hours}:${minutes}:${seconds}`;
+    const dateStr = `${day}.${month}.${year}`;
+
     const entry = {
         personalNr: currentUser.nr,
         name: currentUser.name,
         action: type,
-        date: `${day}.${month}.${year}`,
-        time: `${hours}:${minutes}:${seconds}`
+        date: dateStr,
+        time: timeStr
     };
 
     let history = JSON.parse(localStorage.getItem('stampHistory') || '[]');
     history.push(entry);
     localStorage.setItem('stampHistory', JSON.stringify(history));
 
-    document.getElementById('status-msg').innerText = `Status: ${type} um ${entry.time} Uhr`;
+    const statusEl = document.getElementById('status-msg');
+    let displayMsg = `Status: ${type} um ${timeStr} Uhr`;
+
+    if (type === "Arbeitsbeginn") {
+        // Startzeit lokal zwischenspeichern
+        localStorage.setItem(`startTime_${currentUser.nr}`, timeStr);
+    } else if (type === "Arbeitsende") {
+        // Startzeit abrufen und Differenz berechnen
+        const startTime = localStorage.getItem(`startTime_${currentUser.nr}`);
+        if (startTime) {
+            const netWorkTime = calculateDuration(startTime, timeStr);
+            if (netWorkTime) {
+                displayMsg += `<br><span style="font-weight: bold; color: #2b2b2b;">Geleistete Arbeitszeit: ${netWorkTime}</span>`;
+            }
+            localStorage.removeItem(`startTime_${currentUser.nr}`);
+        }
+    }
+
+    if (statusEl) {
+        statusEl.innerHTML = displayMsg;
+    }
 
     fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
@@ -281,13 +322,11 @@ function openManualTimeForm() {
         return;
     }
 
-    // Header aktualisieren
     const headerEl = document.getElementById('manual-selected-user-header');
     if (headerEl) {
         headerEl.innerText = `Manuelle Erfassung für: ${targetUser.name || targetUser} (Nr. ${nrInput})`;
     }
 
-    // Datum auf heute setzen
     const now = new Date();
     const day = String(now.getDate()).padStart(2, '0');
     const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -297,7 +336,6 @@ function openManualTimeForm() {
     const dateEl = document.getElementById('manual-date');
     if (dateEl) dateEl.value = todayStr;
 
-    // UHRZEIT-FELDER EXPLIZIT LEEREN (Keine Standardwerte 08:00 / 16:30!)
     const startEl = document.getElementById('manual-start-time');
     const endEl = document.getElementById('manual-end-time');
     if (startEl) startEl.value = "";
@@ -319,7 +357,7 @@ function submitManualTime() {
     }
 
     const userNr = userNrInput.value.trim();
-    const dateVal = dateInput.value.trim(); // Format: YYYY-MM-DD
+    const dateVal = dateInput.value.trim();
     const startTime = startInput.value.trim();
     const endTime = endInput.value.trim();
 
@@ -328,14 +366,12 @@ function submitManualTime() {
         return;
     }
 
-    // FAKT 1: Datum sicher von YYYY-MM-DD nach DD.MM.YYYY umwandeln
     let formattedDate = dateVal;
     if (dateVal.includes("-")) {
-        const parts = dateVal.split("-"); // [YYYY, MM, DD]
+        const parts = dateVal.split("-");
         formattedDate = `${parts[2]}.${parts[1]}.${parts[0]}`;
     }
 
-    // FAKT 2: Namen garantiert aus dem localStorage auflösen (kein undefined)
     let empName = "Unbekannt";
     try {
         const users = JSON.parse(localStorage.getItem('users') || '{}');
@@ -347,7 +383,6 @@ function submitManualTime() {
         console.error("Fehler beim Lesen aus localStorage:", e);
     }
 
-    // Sende-Aktionen ausführen
     if (startTime !== "") {
         sendToGoogleScript({
             date: formattedDate,
@@ -368,7 +403,6 @@ function submitManualTime() {
         });
     }
 
-    // Formular leeren & schließen
     startInput.value = "";
     endInput.value = "";
     const formEl = document.getElementById('manual-time-form');
@@ -380,6 +414,7 @@ function submitManualTime() {
 function exportCSV() {
     window.location.href = GOOGLE_SCRIPT_URL;
 }
+
 function sendToGoogleScript(data) {
     fetch(GOOGLE_SCRIPT_URL, {
         method: "POST",
