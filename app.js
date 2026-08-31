@@ -314,59 +314,42 @@ function submitManualTime() {
     const endInput = document.getElementById('manual-end-time');
 
     if (!userNrInput || !dateInput || !startInput || !endInput) {
-        alert("Formularfehler: Eingabefelder im HTML nicht gefunden.");
+        alert("Fehler: Formular-Elemente im HTML nicht gefunden.");
         return;
     }
 
     const userNr = userNrInput.value.trim();
-    const dateVal = dateInput.value;
+    const dateVal = dateInput.value.trim(); // Format: YYYY-MM-DD
     const startTime = startInput.value.trim();
     const endTime = endInput.value.trim();
 
     if (!startTime && !endTime) {
-        alert("Bitte trage mindestens den Arbeitsbeginn ODER das Arbeitsende ein!");
+        alert("Bitte gib mindestens den Arbeitsbeginn ODER das Arbeitsende ein!");
         return;
     }
 
-    // Name sicher aus localStorage auslesen
+    // FAKT 1: Datum sicher von YYYY-MM-DD nach DD.MM.YYYY umwandeln
+    let formattedDate = dateVal;
+    if (dateVal.includes("-")) {
+        const parts = dateVal.split("-"); // [YYYY, MM, DD]
+        formattedDate = `${parts[2]}.${parts[1]}.${parts[0]}`;
+    }
+
+    // FAKT 2: Namen garantiert aus dem localStorage auflösen (kein undefined)
     let empName = "Unbekannt";
     try {
-        let users = JSON.parse(localStorage.getItem('users') || '{}');
-        let foundKey = Object.keys(users).find(key => String(key).trim() === String(userNr));
+        const users = JSON.parse(localStorage.getItem('users') || '{}');
+        const foundKey = Object.keys(users).find(key => String(key).trim() === String(userNr));
         if (foundKey && users[foundKey]) {
             empName = typeof users[foundKey] === 'object' ? users[foundKey].name : users[foundKey];
         }
     } catch (e) {
-        console.error("Fehler beim Abrufen des Namens:", e);
+        console.error("Fehler beim Lesen aus localStorage:", e);
     }
 
-    // Datum formatieren (YYYY-MM-DD -> DD.MM.YYYY)
-    let formattedDate = dateVal;
-    if (dateVal && dateVal.includes("-")) {
-        const parts = dateVal.split("-");
-        formattedDate = `${parts[2]}.${parts[1]}.${parts[0]}`;
-    }
-
-    // Universeller Sende-Aufruf (prüft, wie deine Sende-Funktion heißt)
-    const sendData = (payload) => {
-        if (typeof sendToGoogleScript === 'function') {
-            sendToGoogleScript(payload);
-        } else if (typeof sendDataToGoogleSheet === 'function') {
-            sendDataToGoogleSheet(payload);
-        } else if (typeof stamp === 'function') {
-            // Falls deine App die stamp-Funktion nutzt
-            fetch("DEINE_APPS_SCRIPT_URL", {
-                method: "POST",
-                body: JSON.stringify(payload)
-            });
-        } else {
-            alert("Fehler: Keine Funktion zum Senden an Google Sheets gefunden!");
-        }
-    };
-
-    // 1. Nur Arbeitsbeginn senden, wenn ausgefüllt
+    // Sende-Aktionen ausführen
     if (startTime !== "") {
-        sendData({
+        sendToGoogleScript({
             date: formattedDate,
             time: startTime,
             personalNr: userNr,
@@ -375,9 +358,8 @@ function submitManualTime() {
         });
     }
 
-    // 2. Nur Arbeitsende senden, wenn ausgefüllt
     if (endTime !== "") {
-        sendData({
+        sendToGoogleScript({
             date: formattedDate,
             time: endTime,
             personalNr: userNr,
@@ -386,13 +368,13 @@ function submitManualTime() {
         });
     }
 
-    // Formular zurücksetzen & schließen
+    // Formular leeren & schließen
     startInput.value = "";
     endInput.value = "";
     const formEl = document.getElementById('manual-time-form');
     if (formEl) formEl.style.display = 'none';
 
-    alert("Zeiten erfolgreich gespeichert!");
+    alert("Zeiten erfolgreich übertragen!");
 }
 
 function exportCSV() {
