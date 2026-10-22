@@ -231,17 +231,26 @@ function stamp(type) {
     }
 
     fetch(GOOGLE_SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify(entry)
-    })
-    .then(() => alert(`Erfolgreich gestempelt: ${type}`))
-    .catch(err => {
-        console.error('Fehler:', err);
-        alert('Fehler beim Übertragen!');
-    });
-}
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(entry)
+})
+.then(response => response.text())
+.then(responseText => {
+    var cleanResponse = responseText.trim();
+    
+    if (cleanResponse === "bereits eingeloggt") {
+        alert("bereits eingeloggt");
+    } else if (cleanResponse === "Erfolg") {
+        alert(`Erfolgreich gestempelt: ${type}`);
+    } else {
+        alert("Hinweis: " + cleanResponse);
+    }
+})
+.catch(err => {
+    console.error('Fehler:', err);
+    alert('Fehler beim Übertragen!');
+});
 
 function createUser() {
     const nameInput = document.getElementById('new-name').value.trim();
