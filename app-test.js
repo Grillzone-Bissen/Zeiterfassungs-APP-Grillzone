@@ -179,7 +179,7 @@ function calculateDuration(startTimeStr, endTimeStr) {
     return `${hrs}:${mins}:${secs} Std.`;
 }
 
-// Angepasste Stempel-Funktion mit zweizeiliger Anzeige bei Arbeitsende
+// Stempel-Funktion (Meldungsverarbeitung korrigiert)
 function stamp(type) {
     if (!currentUser) return;
 
@@ -204,53 +204,53 @@ function stamp(type) {
         time: timeStr
     };
 
-    let history = JSON.parse(localStorage.getItem('stampHistory') || '[]');
-    history.push(entry);
-    localStorage.setItem('stampHistory', JSON.stringify(history));
-
-    const statusEl = document.getElementById('status-msg');
-    let displayMsg = `Status: ${type} um ${timeStr} Uhr`;
-
-    if (type === "Arbeitsbeginn") {
-        // Startzeit lokal zwischenspeichern
-        localStorage.setItem(`startTime_${currentUser.nr}`, timeStr);
-    } else if (type === "Arbeitsende") {
-        // Startzeit abrufen und Differenz berechnen
-        const startTime = localStorage.getItem(`startTime_${currentUser.nr}`);
-        if (startTime) {
-            const netWorkTime = calculateDuration(startTime, timeStr);
-            if (netWorkTime) {
-                displayMsg += `<br><span style="font-weight: bold; color: #2b2b2b;">Geleistete Arbeitszeit: ${netWorkTime}</span>`;
-            }
-            localStorage.removeItem(`startTime_${currentUser.nr}`);
-        }
-    }
-
-    if (statusEl) {
-        statusEl.innerHTML = displayMsg;
-    }
-
     fetch(GOOGLE_SCRIPT_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify(entry)
-})
-.then(response => response.text())
-.then(responseText => {
-    var cleanResponse = responseText.trim();
-    
-    if (cleanResponse === "bereits eingeloggt") {
-        alert("bereits eingeloggt");
-    } else if (cleanResponse === "Erfolg") {
-        alert(`Erfolgreich gestempelt: ${type}`);
-    } else {
-        alert("Hinweis: " + cleanResponse);
-    }
-})
-.catch(err => {
-    console.error('Fehler:', err);
-    alert('Fehler beim Übertragen!');
-});
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(entry)
+    })
+    .then(response => response.text())
+    .then(responseText => {
+        var cleanResponse = responseText.trim();
+        
+        if (cleanResponse === "bereits eingeloggt") {
+            alert("bereits eingeloggt");
+        } else if (cleanResponse === "Erfolg") {
+            // Nur bei echtem Erfolg Verlauf und Status lokal aktualisieren
+            let history = JSON.parse(localStorage.getItem('stampHistory') || '[]');
+            history.push(entry);
+            localStorage.setItem('stampHistory', JSON.stringify(history));
+
+            const statusEl = document.getElementById('status-msg');
+            let displayMsg = `Status: ${type} um ${timeStr} Uhr`;
+
+            if (type === "Arbeitsbeginn") {
+                localStorage.setItem(`startTime_${currentUser.nr}`, timeStr);
+            } else if (type === "Arbeitsende") {
+                const startTime = localStorage.getItem(`startTime_${currentUser.nr}`);
+                if (startTime) {
+                    const netWorkTime = calculateDuration(startTime, timeStr);
+                    if (netWorkTime) {
+                        displayMsg += `<br><span style="font-weight: bold; color: #2b2b2b;">Geleistete Arbeitszeit: ${netWorkTime}</span>`;
+                    }
+                    localStorage.removeItem(`startTime_${currentUser.nr}`);
+                }
+            }
+
+            if (statusEl) {
+                statusEl.innerHTML = displayMsg;
+            }
+
+            alert(`Erfolgreich gestempelt: ${type}`);
+        } else {
+            alert("Hinweis: " + cleanResponse);
+        }
+    })
+    .catch(err => {
+        console.error('Fehler:', err);
+        alert('Fehler beim Übertragen!');
+    });
+} // <--- HIER WAR DIE FEHLENDE KLAMMER!
 
 function createUser() {
     const nameInput = document.getElementById('new-name').value.trim();
@@ -424,17 +424,18 @@ function exportCSV() {
     window.location.href = GOOGLE_SCRIPT_URL;
 }
 
+// Hilfsfunktion für manuelle Erfassung im Admin-Menü
 function sendToGoogleScript(data) {
     fetch(GOOGLE_SCRIPT_URL, {
         method: "POST",
-        mode: "no-cors",
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "text/plain;charset=utf-8"
         },
         body: JSON.stringify(data)
     })
-    .then(() => {
-        console.log("Erfolgreich an Google gesendet:", data);
+    .then(res => res.text())
+    .then(text => {
+        console.log("Antwort von Google:", text);
     })
     .catch(error => {
         console.error("Fehler beim Senden:", error);
